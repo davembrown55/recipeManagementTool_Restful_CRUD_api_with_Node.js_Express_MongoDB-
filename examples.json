@@ -1,0 +1,35 @@
+[
+{
+    "title": "Beans on Toast",
+    "description": "Toasted bread with baked beans on it.",
+    "ingredients": ["Baked Beans", "Bread", "Cheese", "Worcester Sauce"],
+    "instructions": ["Toast the bread", "Heat the beans", "Grate the cheese on top", "Add Sauce"],
+    "cookingTimeMinutes": 10
+},
+
+{
+    "title": "Cereal",
+    "description": "Bowl of cereal innit",
+    "ingredients": ["Cereal of choice", "Milk of choice", "Chocolate sauce", "Squirty Cream"],
+    "instructions": ["Pour cereal in bowl", "pour on chocolate sauce", "Loads of squirty cream"],
+    "cookingTimeMinutes": 2
+},
+
+{
+    "title": "Pot Noodle",
+    "description": "It's a Pot Noodle.",
+    "ingredients": ["Pot Noodle", "Boiled Water", "Ketchup"],
+    "instructions": ["Open Pot Noodle", "Remove sachet", "Boil water", 
+    "Pour Water into pot noodle to fill line", "Leave for 5 minutes", "pour sachet contents and ketchup into pot Noodle and mix"],
+    "cookingTimeMinutes": 10
+},
+
+{
+    "title": "Peanut butter and marmite on toast",
+    "description": "Savoury deliciousness",
+    "ingredients": ["Bread", "Peanut Butter", "Marmite"],
+    "instructions": ["Toast the bread", "Liberaly spread peanut butter on to bread", "Liberaly spread marmite on to bread"],
+    "cookingTimeMinutes": 5
+}
+
+]
