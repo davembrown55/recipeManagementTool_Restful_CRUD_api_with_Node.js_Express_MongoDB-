@@ -28,8 +28,16 @@
     "title": "Peanut butter and marmite on toast",
     "description": "Savoury deliciousness",
     "ingredients": ["Bread", "Peanut Butter", "Marmite"],
-    "instructions": ["Toast the bread", "Liberaly spread peanut butter on to bread", "Liberaly spread marmite on to bread"],
+    "instructions": ["Toast the bread", "Liberally spread peanut butter on to bread", "Liberaly spread marmite on to bread"],
     "cookingTimeMinutes": 5
+},
+
+{
+    "title": "Willies on toast",
+    "description": "Toasted bread with added penis's",
+    "ingredients": ["Bread", "Penis's", "bum butter", "whipped spaff"],
+    "instructions": ["Toast the bread", "Liberally spread the bum butter on to bread", "A generous squirt of whipped spaff on to bread", "Delicately arrange penises on to bread"],
+    "cookingTimeMinutes": 15
 }
 
 ]
