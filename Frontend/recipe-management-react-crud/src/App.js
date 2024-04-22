@@ -1,14 +1,25 @@
 import React, { Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Routes, Route, Link } from "react-router-dom";
+import "./App.css";
+
+import AddRecipe from "./components/add-recipe.component";
+import Recipe from "./components/recipe.component";
+import RecipeList from "./components/recipe-list.component";
+
 
 class App extends Component {
   render() {
     return (
       <div>
         <nav className="navbar navbar-expand navbar-dark bg-dark">
-          <a href="/recipes" className="navbar-brand">     
+          {/* <a href="/recipes" className="navbar-brand">     
           Recipe Management Tool       
-          </a>
+          </a> */}
+          <Link to={"/recipes"} className="navbar-brand">
+            Recipe Management Tool
+          </Link>
+
           <div className="navbar-nav mr-auto">
             <li className="nav-item">
               <Link to={"/recipes"} className="nav-link">
@@ -26,7 +37,7 @@ class App extends Component {
         <div className="container mt-3">
           <Routes>
             <Route path="/" element={<RecipesList/>} />
-            <Route path="/recipes" element={<RecipesList/>} />
+            <Route path="/recipes" element={<RecipeList/>} />
             <Route path="/add" element={<AddRecipe/>} />
             <Route path="/recipes/:id" element={<Recipe/>} />
           </Routes>
@@ -38,29 +49,3 @@ class App extends Component {
 
 export default App;
 
-
-// import logo from './logo.svg';
-// import './App.css';
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
-
-// export default App;
