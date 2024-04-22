@@ -36,7 +36,7 @@ class App extends Component {
 
         <div className="container mt-3">
           <Routes>
-            <Route path="/" element={<RecipesList/>} />
+            <Route path="/" element={<RecipeList/>} />
             <Route path="/recipes" element={<RecipeList/>} />
             <Route path="/add" element={<AddRecipe/>} />
             <Route path="/recipes/:id" element={<Recipe/>} />
