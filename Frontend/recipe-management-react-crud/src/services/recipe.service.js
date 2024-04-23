@@ -1,8 +1,8 @@
 import http from "../http-common";
 
 class RecipeDataService {
-  getAll() {
-    return http.get("/recipes");
+  getAll(params) {
+    return http.get("/recipes", {params});
   }
 
   get(id) {
