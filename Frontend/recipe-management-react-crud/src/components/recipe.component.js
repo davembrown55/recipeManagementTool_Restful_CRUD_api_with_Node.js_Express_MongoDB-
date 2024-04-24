@@ -88,7 +88,7 @@ class Recipe extends Component {
   }
 
   updateRecipe() {
-    RecipelDataService.update(
+    RecipeDataService.update(
       this.state.currentRecipe.id,
       this.state.currentRecipe
     )

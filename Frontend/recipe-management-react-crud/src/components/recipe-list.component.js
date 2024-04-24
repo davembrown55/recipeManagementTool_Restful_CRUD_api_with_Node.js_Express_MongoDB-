@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import RecipeDataService from "../services/recipe.service";
 import { Link } from "react-router-dom";
-import usePagination from '@mui/material/usePagination';
+import Pagination from '@mui/material/usePagination';
 
 
 export default class RecipeList extends Component {
@@ -10,7 +10,7 @@ export default class RecipeList extends Component {
     this.onChangeSearchTitle = this.onChangeSearchTitle.bind(this);
     this.retrieveRecipes = this.retrieveRecipes.bind(this);
     this.refreshList = this.refreshList.bind(this);
-    this.setActiveRecipe = this.setActiveRecipel.bind(this);
+    this.setActiveRecipe = this.setActiveRecipe.bind(this);
     this.removeAllRecipes = this.removeAllRecipes.bind(this);
     this.searchTitle = this.searchTitle.bind(this);
 

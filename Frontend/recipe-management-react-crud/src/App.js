@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 
@@ -13,9 +13,6 @@ class App extends Component {
     return (
       <div>
         <nav className="navbar navbar-expand navbar-dark bg-dark">
-          {/* <a href="/recipes" className="navbar-brand">     
-          Recipe Management Tool       
-          </a> */}
           <Link to={"/recipes"} className="navbar-brand">
             Recipe Management Tool
           </Link>
