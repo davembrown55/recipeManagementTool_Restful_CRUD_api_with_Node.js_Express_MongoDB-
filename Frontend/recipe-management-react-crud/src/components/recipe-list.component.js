@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import RecipeDataService from "../services/recipe.service";
 import { Link } from "react-router-dom";
-import Pagination from '@mui/material/usePagination';
+import Pagination from '@mui/material/Pagination';
 
 
 export default class RecipeList extends Component {
