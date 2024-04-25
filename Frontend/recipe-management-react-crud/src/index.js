@@ -18,7 +18,6 @@ root.render(
   </React.StrictMode>
 );
 
-// The reportWebVitals part remains unchanged
 reportWebVitals();
 
 

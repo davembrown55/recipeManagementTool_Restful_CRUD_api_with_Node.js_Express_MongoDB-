@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import RecipeDataService from "../services/recipe.service";
 import { Link } from "react-router-dom";
 import Pagination from '@mui/material/Pagination';
-
+import Badge from 'react-bootstrap/Badge';
 
 export default class RecipeList extends Component {
   constructor(props) {
@@ -224,6 +224,7 @@ export default class RecipeList extends Component {
             Remove All
           </button>
         </div>
+        
         <div className="col-md-6">
           {currentRecipe ? (
             <div>
@@ -247,12 +248,14 @@ export default class RecipeList extends Component {
                 {currentRecipe.published ? "Published" : "Pending"}
               </div>
 
+              <Badge>
               <Link
                 to={"/recipes/" + currentRecipe.id}
                 className="badge badge-warning"
               >
                 Edit
               </Link>
+              </Badge>
             </div>
           ) : (
             <div>

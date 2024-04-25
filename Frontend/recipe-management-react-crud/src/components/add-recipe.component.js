@@ -12,6 +12,9 @@ export default class AddRecipe extends Component {
     this.saveRecipe = this.saveRecipe.bind(this);
     this.newRecipe = this.newRecipe.bind(this);
 
+    this.addIngredient = this.addIngredient.bind(this);
+    this.addInstruction = this.addInstruction.bind(this);
+
 
     this.state = {
       id: null,

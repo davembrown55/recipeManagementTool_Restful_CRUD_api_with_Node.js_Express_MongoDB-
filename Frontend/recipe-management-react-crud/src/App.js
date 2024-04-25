@@ -3,33 +3,35 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Routes, Route, Link } from "react-router-dom";
 import "./App.css";
 
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+
 import AddRecipe from "./components/add-recipe.component";
 import Recipe from "./components/recipe.component";
 import RecipeList from "./components/recipe-list.component";
+
 
 
 class App extends Component {
   render() {
     return (
       <div>
-        <nav className="navbar navbar-expand navbar-dark bg-dark">
-          <Link to={"/recipes"} className="navbar-brand">
-            Recipe Management Tool
-          </Link>
 
-          <div className="navbar-nav mr-auto">
-            <li className="nav-item">
-              <Link to={"/recipes"} className="nav-link">
-                Recipes
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to={"/add"} className="nav-link">
-                Add
-              </Link>
-            </li>
-          </div>
-        </nav>
+          <Navbar expand="lg" bg="dark" data-bs-theme="dark"> 
+          <Container fluid>
+            <Navbar.Brand href={"/recipes"}>Recipe Management Tool</Navbar.Brand>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto" variant="underline" > {/* defaultActiveKey={"/recipes"} */} 
+              <Nav.Link href={"/recipes"} >Recipes</Nav.Link>
+              <Nav.Link href={"/add"} >Add</Nav.Link>
+            </Nav>
+            </Navbar.Collapse>
+
+          </Container>            
+        </Navbar>          
+        
 
         <div className="container mt-3">
           <Routes>
@@ -40,6 +42,7 @@ class App extends Component {
           </Routes>
         </div>
       </div>
+      
     );
   }
 }
