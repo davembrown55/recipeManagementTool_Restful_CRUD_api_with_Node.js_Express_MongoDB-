@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import "./App.css";
 
 import Container from 'react-bootstrap/Container';
@@ -11,10 +11,16 @@ import AddRecipe from "./components/add-recipe.component";
 import Recipe from "./components/recipe.component";
 import RecipeList from "./components/recipe-list.component";
 
+import { withRouter } from './common/with-router';
+
+
 
 
 class App extends Component {
   render() {
+
+    const { location } = this.props.router;
+
     return (
       <div>
 
@@ -23,7 +29,7 @@ class App extends Component {
             <Navbar.Brand href={"/recipes"}>Recipe Management Tool</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto" variant="underline" > {/* defaultActiveKey={"/recipes"} */} 
+            <Nav className="me-auto" variant="underline" activeKey={location.pathname} > 
               <Nav.Link href={"/recipes"} >Recipes</Nav.Link>
               <Nav.Link href={"/add"} >Add</Nav.Link>
             </Nav>
@@ -47,5 +53,5 @@ class App extends Component {
   }
 }
 
-export default App;
+export default withRouter(App);
 
