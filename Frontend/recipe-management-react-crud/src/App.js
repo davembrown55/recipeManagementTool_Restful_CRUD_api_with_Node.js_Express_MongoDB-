@@ -20,15 +20,13 @@ class App extends Component {
   render() {
 
     const { location } = this.props.router;
-    // console.log(location.pathname);
 
-    function highlightRecipesNavEmptyPath() {
-      if (location.pathname == '/') {
-        return "/recipes";        
-      } else {
-        return location.pathname;
-      }
-    }
+    // function highlightRecipesNavEmptyPath() {
+    //   return location.pathname == '/' ? "/recipes" : location.pathname;
+    // }
+
+    const highlightRecipesNavEmptyPath = () =>  location.pathname == '/' ? "/recipes" : location.pathname;
+    
 
     return (
       
