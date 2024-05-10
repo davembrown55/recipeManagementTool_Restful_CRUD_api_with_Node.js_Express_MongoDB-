@@ -4,6 +4,13 @@ import { Link } from "react-router-dom";
 import Pagination from '@mui/material/Pagination';
 import Badge from 'react-bootstrap/Badge';
 
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Stack from 'react-bootstrap/Stack';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+
 export default class RecipeList extends Component {
   constructor(props) {
     super(props);
@@ -155,6 +162,83 @@ export default class RecipeList extends Component {
     } = this.state;
 
     return (
+
+
+
+
+      <Container>   
+      <Container>   
+
+      <Container fluid className = "list p-0 ">
+        <Stack gap={3}>
+          
+           {/* <Stack direction="horizontal" gap={3}  className="col-md-8"> 
+           <Col >
+              <Form.Control className="me-auto" 
+                            type="text" 
+                            placeholder="Search Recipes"
+                            
+                            value={searchTitle}
+                            onChange={this.onChangeSearchTitle} 
+                />
+            
+            </Col>
+            <Col >
+             <Stack direction="horizontal" gap={3}>
+              <Button variant="secondary"                    
+                      type="button"
+                      
+                      onClick={this.retrieveRecipes}
+                        >Search</Button>
+              <div className="vr"></div>
+              <Form.Select >
+                <option value="Title">Search by Title</option>
+                <option value="CookingTime">Search by Cooking Time</option>
+                <option value="Ingredients">Search by Ingredient</option>
+              </Form.Select>
+              </Stack>
+             </Col>
+            
+          </Stack> */}
+
+          
+          <Row xs={1} sm={1} md={2} lg={2} className="col-md-9 gap-3 py-3">
+            <Col xs={12} sm={12} lg={5} className="">
+              <Form.Control className="me-auto" 
+                            type="text" 
+                            placeholder="Search Recipes"
+                            
+                            value={searchTitle}
+                            onChange={this.onChangeSearchTitle} 
+                             
+                />
+            </Col>  
+            <Col xs={12} sm={12} lg={6} className="">
+              <Stack direction="horizontal" gap={2}>
+                <Button variant="secondary"                    
+                        type="button"
+                        
+                        onClick={this.retrieveRecipes}
+                          >Search</Button>
+                <div className="vr"/>
+                <Form.Select className ="Fselect">
+                  <option value="Title">Search by Title</option>
+                  <option value="CookingTime">Search by Cooking Time</option>
+                  <option value="Ingredients">Search by Ingredient</option>
+                </Form.Select>
+              </Stack>
+            </Col>
+          </Row>  
+
+        </Stack>     
+
+       
+
+
+
+      </Container>
+
+      <Container>
       <div className="list row">
         <div className="col-md-8">
           <div className="input-group mb-3">
@@ -176,6 +260,7 @@ export default class RecipeList extends Component {
             </div>
           </div>
         </div>
+
         <div className="col-md-6">
           <h4>Recipe List</h4>
 
@@ -265,6 +350,9 @@ export default class RecipeList extends Component {
           )}
         </div>
       </div>
+      </Container>
+      </Container>
+      </Container>
     );
   }
   

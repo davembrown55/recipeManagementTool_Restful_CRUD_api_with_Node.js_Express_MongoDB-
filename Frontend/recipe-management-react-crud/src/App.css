@@ -34,6 +34,11 @@
   margin: auto;
 }
 
+.vr{
+  min-width: 1px;
+}
+
+
 .submit-form {
   max-width: 300px;
   margin: auto;
