@@ -41,41 +41,43 @@ exports.create = (req, res) => {
 
 };
 
-// Retrieve all recipes from the database.
+const buildCondition = (req) => {
+  let condition = {};
+  const { title, ingredients, maxCookingTime } = req.query; 
+
+  if (title) {
+    condition.title = { $regex: new RegExp(title), $options: "i" };
+  }
+  if (ingredients) {
+    condition.ingredients = { $in: [ingredients] };  //  if `ingredients` is a string. May update this to handle an array of strings
+  }
+  if (maxCookingTime) {
+    condition.cookingTimeMinutes = { $lte: Number(maxCookingTime) };
+  }
+
+  return condition;
+}
+
+// Retrieve all recipes from the database. Handle requests re: title, ingredients and maxCookingTime
 exports.findAll = (req, res) => {
-  const { page, size, title } = req.query;
-//  const title = req.query.title;
+  const { page, size } = req.query;
+  const condition = buildCondition(req);
+  const { limit, offset } = getPagination(page, size);
 
-  const condition = title ? { title: { $regex: new RegExp(title), $options: "i" } } : {};
-
-  const {limit, offset} = getPagination(page, size);
-
-  Recipe.paginate(condition, {offset, limit})
-  .then((data) => {
-    res.send({
-      totalItems: data.totalDocs,
-      recipes: data.docs,
-      totalPages: data.totalPages,
-      currentPage: data.page - 1,
+  Recipe.paginate(condition, { offset, limit })
+    .then((data) => {
+      res.send({
+        totalItems: data.totalDocs,
+        recipes: data.docs,
+        totalPages: data.totalPages,
+        currentPage: data.page - 1,
+      });
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: err.message || "An error occurred while retrieving recipes."
+      });
     });
-  })
-  .catch(err => {
-    res.status(500).send({
-      message:
-        err.message || "An error occurred while retrieving recipes."
-    });
-  });
-
-  // Recipe.find(condition)
-  //   .then(data => {
-  //     res.send(data);
-  //   })
-  //   .catch(err => {
-  //     res.status(500).send({
-  //       message:
-  //         err.message || "An error occurred while retrieving recipes."
-  //     });
-  //   });
 };
 
 // Find a single recipe with an id
