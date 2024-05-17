@@ -33,6 +33,14 @@
   max-width: 750px;
   margin: auto;
 }
+.list-container {  
+  max-width: 750px;
+  margin: auto;
+}
+
+.small-text {
+  font-size:small; 
+}
 
 .vr{
   min-width: 1px;

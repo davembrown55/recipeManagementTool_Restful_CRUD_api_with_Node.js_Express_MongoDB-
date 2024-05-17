@@ -28,6 +28,16 @@ class RecipeDataService {
   findByTitle(title) {
     return http.get(`/recipes?title=${title}`);
   }
+
+  findByIngredient(ingredients) {
+    return http.get(`/recipes?ingredients=${ingredients}`);
+  }
+
+  findByMaxCookingTime(maxCookingTime) {
+    return http.get(`/recipes?maxCookingTime=${maxCookingTime}`);
+  }
+
+
 }
 
 export default new RecipeDataService();

@@ -21,11 +21,7 @@ class App extends Component {
 
     const { location } = this.props.router;
 
-    // function highlightRecipesNavEmptyPath() {
-    //   return location.pathname == '/' ? "/recipes" : location.pathname;
-    // }
-
-    const highlightRecipesNavEmptyPath = () =>  location.pathname == '/' ? "/recipes" : location.pathname;
+    const highlightRecipesNavEmptyPath = () => location.pathname == '/' ? "/recipes" : location.pathname;
     
 
     return (

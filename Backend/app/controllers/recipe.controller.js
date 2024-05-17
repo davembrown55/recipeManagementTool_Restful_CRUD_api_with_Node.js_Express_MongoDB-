@@ -49,8 +49,11 @@ const buildCondition = (req) => {
     condition.title = { $regex: new RegExp(title), $options: "i" };
   }
   if (ingredients) {
-    condition.ingredients = { $in: [ingredients] };  //  if `ingredients` is a string. May update this to handle an array of strings
+    let ingredientStartsWith = new RegExp( "^" + ingredients)
+    condition.ingredients = { $elemMatch: { $regex: ingredientStartsWith, $options: "i"} };  
   }
+
+
   if (maxCookingTime) {
     condition.cookingTimeMinutes = { $lte: Number(maxCookingTime) };
   }
