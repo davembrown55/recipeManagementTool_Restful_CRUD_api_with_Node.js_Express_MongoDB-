@@ -61,7 +61,16 @@
   font-weight: 600;
 }
 
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #eee;
+    background: #180e21;
+  }
 
+  body a {
+    color: #809fff;
+  }
+}
 
 @keyframes App-logo-spin {
   from {

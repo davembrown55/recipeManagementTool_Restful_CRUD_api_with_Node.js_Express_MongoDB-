@@ -11,7 +11,10 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Card from 'react-bootstrap/Card';
+import { createTheme, ThemeProvider } from '@mui/material/styles'
+import useMediaQuery from '@mui/material/useMediaQuery'
 import { ButtonGroupButtonContext } from '@mui/material';
+
 
 const RecipeList = () => {
   const [recipes, setRecipes] = useState([]);
@@ -133,6 +136,19 @@ const RecipeList = () => {
   
   }
 
+  // dark or light mnode for pagination
+  const preferedMode = useMediaQuery('(prefers-color-scheme: dark)'); 
+
+  const theme = React.useMemo( 
+    () => 
+        createTheme({ 
+            palette: { 
+                mode: preferedMode ? 'dark' : 'light', 
+            }, 
+        }), 
+    [preferedMode], 
+  ); 
+
   const handleNoSearchResults = () => {
     if (recipes.length === 0 ) {
       return <ListGroup.Item
@@ -166,6 +182,7 @@ const RecipeList = () => {
                 value={searchQuery} 
                 onChange={onChangeSearchQuery} 
                 isInvalid={!!errors.maxCookingTime}
+                data-bs-theme={darkOrLightMode()} 
               />
               <Form.Control.Feedback type="invalid">
                 {errors.maxCookingTime}
@@ -181,7 +198,8 @@ const RecipeList = () => {
               <p className="ps-2 pb-1 mb-0 small-text">Search Options:</p>
               <Form.Select 
                 value={searchType}
-                onChange={handleSelectChange}                
+                onChange={handleSelectChange}      
+                data-bs-theme={darkOrLightMode()}          
               >
                 <option value="title" label="Search by Title">Title</option>
                 <option value="maxCookingTime" label="Search by Max Cooking Time">Max Cooking Time</option>
@@ -198,18 +216,25 @@ const RecipeList = () => {
         <Col xs={12} sm={12} md={6} lg={6} className="d-flex align-items-center mt-1">
 
               <Col xs={6} sm={6} md={6} lg={6}>
+              <ThemeProvider theme={theme}> 
                 <Pagination
                   count={count}
                   page={page}
                   onChange={handlePageChange}
+                  // palette={mode: darkOrLightMode()}
                   color="primary"
                   size="small"
                   variant="outlined"
                   shape="rounded"                  
                 />
+              </ThemeProvider> 
               </Col>
               <Col xs={3} sm={3} md={6} lg={6}>
-                <Form.Select value={pageSize} onChange={handlePageSizeChange}  className="small-text">
+                <Form.Select value={pageSize} 
+                  onChange={handlePageSizeChange}  
+                  className="small-text"
+                  data-bs-theme={darkOrLightMode()}
+                >
                   {pageSizes.map(size => (
                     <option className="small-text" key={size} value={size}>{size + " items per page"}</option>
                   ))}
@@ -225,7 +250,6 @@ const RecipeList = () => {
             <Col>              
               <ListGroup as="ul">
                   {handleNoSearchResults()}
-                  {/* {console.log(recipes.length)} */}
               </ListGroup>
 
             </Col>
