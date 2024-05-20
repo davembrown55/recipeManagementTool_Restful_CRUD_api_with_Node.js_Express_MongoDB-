@@ -9,6 +9,9 @@ import Stack from 'react-bootstrap/Stack';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import ListGroup from 'react-bootstrap/ListGroup';
+import Card from 'react-bootstrap/Card';
+import { ButtonGroupButtonContext } from '@mui/material';
 
 const RecipeList = () => {
   const [recipes, setRecipes] = useState([]);
@@ -29,6 +32,7 @@ const RecipeList = () => {
 
   const onChangeSearchQuery = (e) => {
     const value = e.target.value;
+    setCurrentRecipe(null)
     setSearchQuery(value);
 
     if (searchType === "maxCookingTime") {
@@ -122,6 +126,31 @@ const RecipeList = () => {
     searchByOption();
   };
 
+  const darkOrLightMode = (e) => {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return "dark"
+  } else {return "light"}
+  
+  }
+
+  const handleNoSearchResults = () => {
+    if (recipes.length === 0 ) {
+      return <ListGroup.Item
+        action variant={darkOrLightMode()} as="li" key={recipes.length}
+        >No recipe's meet that criteria</ListGroup.Item>
+    } else { 
+      return recipes.map((recipe, index) => (
+        <ListGroup.Item action variant={darkOrLightMode()} as="li"   
+          className={index === currentIndex ? "active" : ""}
+          onClick={() => setActiveRecipe(recipe, index)}
+          key={index}
+        >
+          {recipe.title}
+        </ListGroup.Item>
+      ));  
+    }
+  }
+
   return (
 
     <Container fluid  className='list-container p-0'>
@@ -152,7 +181,7 @@ const RecipeList = () => {
               <p className="ps-2 pb-1 mb-0 small-text">Search Options:</p>
               <Form.Select 
                 value={searchType}
-                onChange={handleSelectChange}
+                onChange={handleSelectChange}                
               >
                 <option value="title" label="Search by Title">Title</option>
                 <option value="maxCookingTime" label="Search by Max Cooking Time">Max Cooking Time</option>
@@ -176,7 +205,7 @@ const RecipeList = () => {
                   color="primary"
                   size="small"
                   variant="outlined"
-                  shape="rounded"
+                  shape="rounded"                  
                 />
               </Col>
               <Col xs={3} sm={3} md={6} lg={6}>
@@ -192,41 +221,54 @@ const RecipeList = () => {
         <Row xs={1} sm={2} md={2} lg={2}>          
           <Col className="col-md-6">      
           <Col xs={12} md={7}><h4 className="ps-2 ">Recipe List</h4></Col> 
+
             <Col>              
-              <ul className="list-group">
-                {recipes.map((recipe, index) => (
-                  <li
-                    className={"list-group-item " + (index === currentIndex ? "active" : "")}
-                    onClick={() => setActiveRecipe(recipe, index)}
-                    key={index}
-                  >
-                    {recipe.title}
-                  </li>
-                ))}
-              </ul>
+              <ListGroup as="ul">
+                  {handleNoSearchResults()}
+                  {/* {console.log(recipes.length)} */}
+              </ListGroup>
+
             </Col>
 
           </Col>
+          
           <Col className="col-md-6 mt-3 mt-md-0">
             {currentRecipe && (
-              <div className="px-3">
-                <h4>Recipe Details</h4>
-                <p className="mb-1"><strong>Title:</strong> {currentRecipe.title}</p>
-                <Badge bg="warning">
-                  <Link to={`/recipes/${currentRecipe.id}`}>
-                    View and Edit
-                  </Link>
-                </Badge>
-                <p><strong>Description:</strong> {currentRecipe.description}</p>
-                <p><strong>Cooking Time:</strong> {currentRecipe.cookingTimeMinutes + " minutes"}</p>
-                <p className="mb-0"><strong>Ingredients:</strong></p>
-                <ul className="small-text">
-                  {currentRecipe.ingredients.map((ingredient) => (
-                      <li key={ingredient.id}>{ingredient}</li>
-                    ))}
-               </ul>
+              <Card
+                  bg={darkOrLightMode()}
+                  key={darkOrLightMode()}
+                  text={darkOrLightMode() === 'light' ? 'dark' : 'white'}
+                  style={{ width: '18rem' }}
+                  className="mb-2"
+              > 
+                <Card.Header as="h4">Recipe Details</Card.Header>
 
-              </div>
+                <Card.Body>
+                  <Card.Title> <b>Title:</b> {currentRecipe.title}</Card.Title>
+
+
+                  <Card.Text className='mt-3'>
+                    <b>Description:</b> {currentRecipe.description}
+                  </Card.Text>
+                  <Card.Text>
+                    <b>Cooking Time:</b> {currentRecipe.description}
+                  </Card.Text>
+                  <Card.Text>
+                  <b>Ingredients:</b>
+                  <ul className="small-text ps-3">
+                    {currentRecipe.ingredients.map((ingredient) => (
+                        <li key={ingredient.id}>{ingredient}</li>
+                      ))}
+                  </ul>
+                  </Card.Text>   
+                               
+                </Card.Body>
+                <Button variant="primary" className="align-self-end mb-3 me-3" >
+                    <Link to={`/recipes/${currentRecipe.id}`} className="text-light">
+                      View and Edit
+                    </Link>
+                </Button> 
+              </Card>
             )}
           </Col>
         </Row>
