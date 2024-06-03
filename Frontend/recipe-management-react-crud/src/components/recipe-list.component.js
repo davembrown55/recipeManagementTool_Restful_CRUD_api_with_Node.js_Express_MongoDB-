@@ -152,14 +152,14 @@ const RecipeList = () => {
   const handleNoSearchResults = () => {
     if (recipes.length === 0 ) {
       return <ListGroup.Item
-        action variant={darkOrLightMode()} as="li" key={recipes.length}
+        action variant={darkOrLightMode()} as="li" key="no-results"
         >No recipe's meet that criteria</ListGroup.Item>
     } else { 
       return recipes.map((recipe, index) => (
         <ListGroup.Item action variant={darkOrLightMode()} as="li"   
           className={index === currentIndex ? "active" : ""}
           onClick={() => setActiveRecipe(recipe, index)}
-          key={index}
+          key={recipe.id || index}
         >
           {recipe.title}
         </ListGroup.Item>
@@ -221,7 +221,6 @@ const RecipeList = () => {
                   count={count}
                   page={page}
                   onChange={handlePageChange}
-                  // palette={mode: darkOrLightMode()}
                   color="primary"
                   size="small"
                   variant="outlined"
@@ -243,7 +242,7 @@ const RecipeList = () => {
           </Col>
       </Row>
 
-        <Row xs={1} sm={2} md={2} lg={2}>          
+        <Row xs={1} sm={2} md={2} lg={2} className='mb-10'>          
           <Col className="col-md-6">      
           <Col xs={12} md={7}><h4 className="ps-2 ">Recipe List</h4></Col> 
 
@@ -270,21 +269,20 @@ const RecipeList = () => {
                 <Card.Body>
                   <Card.Title> <b>Title:</b> {currentRecipe.title}</Card.Title>
 
-
                   <Card.Text className='mt-3'>
                     <b>Description:</b> {currentRecipe.description}
                   </Card.Text>
                   <Card.Text>
                     <b>Cooking Time:</b> {currentRecipe.description}
                   </Card.Text>
-                  <Card.Text>
-                  <b>Ingredients:</b>
+                  <Card.Text className='mb-1'>
+                    <b>Ingredients:</b>
+                  </Card.Text>   
                   <ul className="small-text ps-3">
                     {currentRecipe.ingredients.map((ingredient) => (
                         <li key={ingredient.id}>{ingredient}</li>
                       ))}
-                  </ul>
-                  </Card.Text>   
+                  </ul>                 
                                
                 </Card.Body>
                 <Button variant="primary" className="align-self-end mb-3 me-3" >

@@ -132,7 +132,7 @@ class Recipe extends Component {
                   value={currentRecipe.title}
                   onChange={this.onChangeTitle}
                 />
-              </div>
+              </div>              
               <div className="form-group">
                 <label htmlFor="description">Description</label>
                 <input
