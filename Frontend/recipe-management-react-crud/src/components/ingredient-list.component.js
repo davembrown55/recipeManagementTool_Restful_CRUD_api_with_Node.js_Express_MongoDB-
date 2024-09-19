@@ -55,21 +55,6 @@ const IngredientList = ({
       return true;
     }
 
-    // if (errors.ingredientsError === undefined) {      
-    //   console.log(`errors.ingredientsError : undefined index=${index}`);
-    //   return false;
-    // }
-    
-    // if (errors.ingredientsError[index] === undefined) {
-    //   console.log(`errors.ingredientsError[index] : undefined index=${index}`);
-    //   console.log(`returned false from isInvalid`)
-    //   return false;
-    // } else if (errors.ingredientsError[index] !== undefined) {
-    //   console.log(`errors.ingredientsError[index] : ${errors.ingredientsError[index]} index=${index}`);
-    //   console.log(`returned true from isInvalid`);
-    //   return true;
-    // }
-
   }
 
     return (
@@ -79,6 +64,7 @@ const IngredientList = ({
           as="ul"         
           variant={themeVariants.variant} 
           data-bs-theme={themeVariants['data-bs-theme']}
+          numbered
           >
         {ingredients.map((ingredient, index) => (
           <ListGroup.Item 

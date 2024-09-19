@@ -37,11 +37,6 @@ class RecipeDataService {
     return http.get(`/recipes?maxCookingTime=${maxCookingTime}`);
   }
 
-  // findPageByIDifSmlrPgSize(recipeIDforsmlrPgSz) {
-  //   return http.get(`/recipes?recipeIDforsmlrPgSz=${crntIDifsmllerPage}`);
-  // }
-
-
 }
 
 export default new RecipeDataService();

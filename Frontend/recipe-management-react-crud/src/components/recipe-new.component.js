@@ -35,15 +35,12 @@ const Recipe = () => {
   }, [id]);
 
   useEffect(() => {
-     
-
     if (message) {
       const submitMessage = document.getElementsByClassName("rcpMessageTxt");
-
       submitMessage[0].style.visibility = "visible";
       submitMessage[0].style.opacity = "1";
-      submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms";
-      
+      submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms"; 
+
       const timerFadeOut = setTimeout(() => {
         submitMessage[0].style.visibility = "hidden";
         submitMessage[0].style.opacity = "0";
@@ -56,19 +53,6 @@ const Recipe = () => {
       return () => clearTimeout(timer, timerFadeOut);
     }
   }, [message]);
-
-  // rcpMessageTxt
-
-  // const submitMessage = document.getElementsByClassName("submittedMessage");
-  // submitMessage[0].style.visibility = "visible";
-  // submitMessage[0].style.opacity = "1";
-  // submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms";
-
-  // window.setTimeout(() => {
-  //   submitMessage[0].style.visibility = "hidden";
-  //   submitMessage[0].style.opacity = "0";
-  //   submitMessage[0].style.transition = "visibility 0s linear 300ms, opacity 1000ms";
-  // }, 1000);
 
 
   const onChangeTitle = (e) => {
@@ -279,13 +263,9 @@ const Recipe = () => {
             break;
         }
       }
-
       return  Object.keys(valFailMessage).map((item,index) => {
         return (<p>{valFailMessage[item]}</p>)
       })
-
-      // validationErrors.ingredientsError = 'Field Empty';
-      // validationErrors.ingredientsErrorIndex = index;
     }
   }
   
@@ -316,7 +296,7 @@ const Recipe = () => {
                       isInvalid={!!errors.titleError} 
                     >
                     </Form.Control>
-                    <Form.Control.Feedback type="invalid">
+                    <Form.Control.Feedback className="" type="invalid">
                       {errors.titleError}
                     </Form.Control.Feedback>
                 </Form.Group>

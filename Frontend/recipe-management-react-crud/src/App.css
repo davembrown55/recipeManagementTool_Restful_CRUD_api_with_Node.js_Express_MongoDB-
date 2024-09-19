@@ -2,33 +2,6 @@
   text-align: center;
 }
 
-
-/* .App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  } */
-/* } */
-
-/* .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-} */
-
-/* .App-link {
-  color: #61dafb;
-} */
-
 html, body {
   height: 100%;
   margin: 0;
@@ -140,6 +113,13 @@ p {
   margin-left: 0.5rem;
 }
 
+.list-group-numbered > .list-group-item::before {
+  content: counters(section, "") "";
+  font-size: x-small;
+  padding-right: 0.25rem;
+  
+}
+
 .ing-smaller-btn {
     /* font-size: 0.8rem; */
     font-size: 1rem;
@@ -206,6 +186,7 @@ p {
   font-size: .875em;
   /* margin-bottom: 0; */
 }
+
 /* .updateMessages p {
   margin-bottom: 0;
 } */
