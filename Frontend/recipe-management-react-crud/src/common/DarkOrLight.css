@@ -1,0 +1,105 @@
+.dark {
+    color: #eee;
+    background-color: #0d0711;
+}
+
+.light {   
+    background-color: #d9e9e4;
+}
+
+.dark .navbar {
+    background-color: rgb(34, 38, 43);
+    color: #eee;
+    --bs-navbar-brand-color: #eee;
+    --bs-navbar-brand-hover-color: #809fff;
+    --bs-navbar-color: #eee;
+    --bs-navbar-active-color: #eee;
+    --bs-navbar-hover-color: #809fff;  
+}
+
+.light .navbar {
+    /* background-color:#e9ecef; */ 
+    background-color:#bae4d6;
+    --bs-navbar-brand-color: #1d3723;
+    
+}
+
+.dark .navbar .btn {
+     --bs-btn-bg: #dbe4ee;
+     --bs-btn-padding-x: 0.25rem;
+     --bs-btn-padding-y: 0.1rem;
+}
+
+.light .navbar .btn {
+     --bs-btn-bg: #40474d;
+     --bs-btn-padding-x: 0.25rem;
+     --bs-btn-padding-y: 0.1rem;
+}
+
+.light .navbar-brand {
+    /* font-weight:550; */
+}
+
+.dark .MuiPagination-root button {
+    background-color: #361451;
+    color: #bdaeae;
+    /* color: var(--bs-secondary-color); */
+}
+
+.light .MuiPagination-root button {
+    background-color: #bdd7cd;
+}
+
+.dark .MuiButtonBase-root.MuiPaginationItem-root.Mui-selected  {
+background-color: #5c2985;
+color: #1976d2;
+
+}
+
+.dark .MuiButtonBase-root.MuiPaginationItem-root.Mui-disabled  {
+opacity: 0.5;
+}
+
+.light .MuiButtonBase-root.MuiPaginationItem-root.Mui-selected  {
+background-color: rgba(210, 232, 223, 1);
+}
+
+.light .list-group-item {
+    /* --bs-list-group-border-color: var(--bs-success-border-subtle);     */
+    --bs-list-group-border-color: #cdded9;    
+    /* background-color: #d9e9e4; */
+}
+
+.light .recipeCard .list-group-item {
+    background-color: #eeeeee;
+}
+
+.light .card  {
+    background-color: #eaf1ee;
+}
+
+.light .list-group-item.active {
+    background-color: var(--bs-info-text-emphasis);
+}
+
+.dark .list-group-item.active {
+    background-color: #c4c6e8;
+}
+
+.light .form-select{
+    border-color: var(--bs-dark-bg-subtle); 
+}
+
+.light .btnDisableTxt {
+    color: #dc3545;
+}
+.dark .btnDisableTxt {
+    color: #ea868f; 
+}
+
+.light .invalid-feedback {
+    color: #dc3545;
+}
+.dark .invalid-feedback {
+    color: #ea868f;
+}

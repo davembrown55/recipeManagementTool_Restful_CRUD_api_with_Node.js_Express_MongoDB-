@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import RecipeDataService from "../services/recipe.service";
 import { Link } from "react-router-dom";
 import Pagination from '@mui/material/Pagination';
-import Badge from 'react-bootstrap/Badge';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Stack from 'react-bootstrap/Stack';
@@ -11,45 +10,35 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Card from 'react-bootstrap/Card';
-import { createTheme, ThemeProvider } from '@mui/material/styles'
-import useMediaQuery from '@mui/material/useMediaQuery'
-import { ButtonGroupButtonContext } from '@mui/material';
+import { useTheme} from '../common/ThemeProvider';
+
 
 
 const RecipeList = () => {
+
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 577);
+  const [searchWhileTyping, setSearchWhileTyping] = useState(true);
+  const [pageSize, setPageSize] = useState(isSmallScreen ? 3 : 6);  
   const [recipes, setRecipes] = useState([]);
   const [currentRecipe, setCurrentRecipe] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [searchType, setSearchType] = useState("title");
   const [searchLabel, setSearchLabel] = useState("Title");
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
-  const [pageSize, setPageSize] = useState(6);
+  const [totalRecipes, setTotalRecipes] = useState(0);
   const pageSizes = [3, 6, 9];
   const [errors, setErrors] = useState({});
+  const [valOrSubmit, setValOrSubmit] = useState({});
+  const [valFailedClearResults, setValFailedClearResults] = useState(false);
+  const [newSearch, setNewSearch] = useState(true);
+  const [currentId, setCurrentId] = useState(null);
 
-  useEffect(() => {
-    retrieveRecipes();
-  }, [searchQuery, page, pageSize, searchType]);
-
-  const onChangeSearchQuery = (e) => {
-    const value = e.target.value;
-    setCurrentRecipe(null)
-    setSearchQuery(value);
-
-    if (searchType === "maxCookingTime") {
-      if (isNaN(value) || value === "") {
-        setErrors({ maxCookingTime: 'Please enter a valid number' });
-      } else {
-        setErrors({});
-      }
-    }
-  };
-
+  // const getRequestParams = useCallback((searchQuery, page, pageSize) => {
   const getRequestParams = (searchQuery, page, pageSize) => {
     let params = {};
-
     if (searchQuery) {
       params[searchType] = searchQuery;
     }
@@ -59,47 +48,173 @@ const RecipeList = () => {
     if (pageSize) {
       params["size"] = pageSize;
     }
-
     return params;
   };
+  // }, [searchType, searchQuery, page, pageSize]); 
 
+
+  // const retrieveRecipes = useCallback(() => {    
   const retrieveRecipes = () => {
     const params = getRequestParams(searchQuery, page, pageSize);
 
     RecipeDataService.getAll(params)
       .then(response => {
-        const { recipes, totalPages } = response.data;
+        const { recipes, totalPages, totalItems } = response.data;
         setRecipes(Array.isArray(recipes) ? recipes : []);
         setCount(totalPages || 0);
+        setTotalRecipes(totalItems);
+        setValFailedClearResults(false);
       })
       .catch(e => {
         console.log(e);
-        setRecipes([]); 
+        setRecipes([]);
         setCount(0);
-      });
+      });    
+  };      
+  // }, [getRequestParams]); 
+
+  // Clear recipe array on non-Empty validation fail
+  useEffect(() => {  
+    if(valFailedClearResults) {
+      setRecipes([]);
+      setTotalRecipes(0);
+    };
+  }, [valFailedClearResults]);
+
+  // Get recipes
+  useEffect(() => {    
+      retrieveRecipes();
+  }, [page, pageSize, searchQuery]);
+
+
+  // Handle search submission when searchWhileTyping is false
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!searchWhileTyping && (!!errors.maxCookingTime === false || !!errors.isEmptyError === false)) {      
+        setSearchQuery(searchInput); 
+        setPage(1);
+        setActiveRecipe(null, -1, null); // reset currentRecipe        
+        setSearchInput('');
+        setErrors({}); // Reset errors       
+        setNewSearch(true);
+        displaySubmitMessage();
+    }
   };
 
-  const validateInput = () => {
-    let isValid = true;
-    let validationErrors = {};
+  const displaySubmitMessage = () => {
+    
+    const submitMessage = document.getElementsByClassName("submittedMessage");
+      submitMessage[0].style.visibility = "visible";
+      submitMessage[0].style.opacity = "1";
+      submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms";
 
-    if (searchType === "maxCookingTime") {
-      if (isNaN(searchQuery) || searchQuery === "") {
+    const submitTimer =  window.setTimeout(() => {
+        submitMessage[0].style.visibility = "hidden";
+        submitMessage[0].style.opacity = "0";
+        submitMessage[0].style.transition = "visibility 0s linear 300ms, opacity 1000ms";
+      }, 1000);
+      return () => clearTimeout(submitTimer);
+  };
+
+  // UseEffect to handle screen resize
+  useEffect(() => {
+    const handleResize = () => {
+      const isSmall = window.innerWidth <= 577;
+      setIsSmallScreen(isSmall);      
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+  
+
+  useEffect(() => {
+    if (currentRecipe) {
+      const newPageSize = isSmallScreen ? 3 : 6;
+
+      //Set page that contains selected recipe in new array
+      const prevOffset = (page - 1) * pageSize;      
+      const recipeIndexTotalItems = prevOffset + currentIndex;
+      const newPage = Math.floor(recipeIndexTotalItems / newPageSize) + 1;
+      setPage(newPage);
+      
+      //set current index, as array size from server will be different
+      const newOffset = newPageSize * (newPage - 1);
+      const newIndex = recipeIndexTotalItems - newOffset;
+      setPageSize(newPageSize);
+      setCurrentIndex(newIndex);
+
+    } else {  
+      const newPageSize = isSmallScreen ? 3 : 6;
+      setPageSize(newPageSize);
+      setPage(1);
+    };      
+  }, [isSmallScreen]);
+
+  const onChangeSearchInput = (e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+  };
+
+  useEffect(() => {
+    const validateInput = () => {
+
+      let isValid = true; 
+      let validationSuccess = {}; 
+      let validationErrors = {};
+  
+      if (searchType === "maxCookingTime") {
+        if (isNaN(searchInput) ) {
+          isValid = false;
+          validationErrors['maxCookingTime'] = 'Please enter a valid number';
+          if(searchWhileTyping) {
+            setValFailedClearResults(true);
+          }
+      }};
+
+      if (searchInput.trim().length === 0 && !newSearch) {
+        validationErrors['isEmptyError'] = 'Search field empty';
         isValid = false;
-        validationErrors['maxCookingTime'] = 'Please enter a valid number';
-      }
-    }
+      };
+      
+      if (!!errors && !newSearch) { 
+        validationSuccess['validation'] = 'input OK';
+      };  
 
-    setErrors(validationErrors);
-    return isValid;
-  };
+      if (searchWhileTyping && !!!validationErrors.maxCookingTime  && 
+      !!validationErrors.isEmptyError) {
+          setSearchQuery('');
+          retrieveRecipes();
+      };
 
-  const searchByOption = () => {
-    if (!validateInput()) {
-      return; // Stop the function if validation fails
-    }
-    retrieveRecipes();
-  };
+      setErrors(validationErrors); 
+      setValOrSubmit(validationSuccess);
+
+      if(searchWhileTyping) { 
+        setActiveRecipe(null, -1, null); 
+        setPage(1);
+        if(isValid && !newSearch) { 
+          setSearchQuery(searchInput);
+          displaySubmitMessage();
+        };
+      };     
+      
+      if(isValid) {        
+        setErrors({});
+      } else if(!isValid) {
+        setValOrSubmit({});         
+      };
+    };
+    validateInput();
+    setNewSearch(false); // no Search field empty validation message on new search. 
+  }, [searchInput]);
+
+
 
   const handleSelectChange = (event) => {
     const { value, selectedIndex, options } = event.target;
@@ -108,11 +223,23 @@ const RecipeList = () => {
     setSearchLabel(label);
     setSearchQuery(''); // Reset search query on type change
     setErrors({}); // Reset errors on type change
+    setValOrSubmit({}); 
+    setActiveRecipe(null, -1, null); // reset currentRecipe    
+    if(searchInput !== '') { 
+      setSearchInput('');
+      setNewSearch(true); //avoid Search field empty validation if input reset
+    }
   };
 
-  const setActiveRecipe = (recipe, index) => {
+
+  const handleSearchWhileTyping = (e) => {
+    setSearchWhileTyping(!searchWhileTyping);
+  };
+
+  const setActiveRecipe = (recipe, id, index) => {
     setCurrentRecipe(recipe);
     setCurrentIndex(index);
+    setCurrentId(id); 
   };
 
   const handlePageChange = (event, value) => {
@@ -120,45 +247,37 @@ const RecipeList = () => {
   };
 
   const handlePageSizeChange = (event) => {
-    setPageSize(event.target.value);
-    setPage(1);
+    const newPageSize = parseInt(event.target.value, 10);    
+    if (currentRecipe) {
+      //Set page that contains selected recipe in new array
+      const prevOffset = (page - 1) * pageSize;      
+      const recipeIndexTotalItems = prevOffset + currentIndex;
+      const newPage = Math.floor(recipeIndexTotalItems / newPageSize) + 1;
+      setPage(newPage);
+      
+      //set current index, as array size from server will be different
+      const newOffset = newPageSize * (newPage - 1);
+      const newIndex = recipeIndexTotalItems - newOffset;
+      setPageSize(newPageSize);
+      setCurrentIndex(newIndex);     
+    } else {  
+      setPageSize(newPageSize);
+      setPage(1);
+    };
   };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    searchByOption();
-  };
-
-  const darkOrLightMode = (e) => {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return "dark"
-  } else {return "light"}
   
-  }
-
-  // dark or light mnode for pagination
-  const preferedMode = useMediaQuery('(prefers-color-scheme: dark)'); 
-
-  const theme = React.useMemo( 
-    () => 
-        createTheme({ 
-            palette: { 
-                mode: preferedMode ? 'dark' : 'light', 
-            }, 
-        }), 
-    [preferedMode], 
-  ); 
+  const { themeVariants } = useTheme(); 
 
   const handleNoSearchResults = () => {
     if (recipes.length === 0 ) {
       return <ListGroup.Item
-        action variant={darkOrLightMode()} as="li" key="no-results"
+        action variant={themeVariants.variant} as="li" key="no-results"
         >No recipe's meet that criteria</ListGroup.Item>
     } else { 
       return recipes.map((recipe, index) => (
-        <ListGroup.Item action variant={darkOrLightMode()} as="li"   
-          className={index === currentIndex ? "active" : ""}
-          onClick={() => setActiveRecipe(recipe, index)}
+        <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+          className={recipe.id === currentId ? "active" : ""}
+          onClick={() => setActiveRecipe(recipe, recipe.id, index)}
           key={recipe.id || index}
         >
           {recipe.title}
@@ -167,56 +286,97 @@ const RecipeList = () => {
     }
   }
 
+  const searchResultFeedback = () => {
+    const searchTypeToDisplayTxt = () => {
+        switch (searchType) {
+          case "title":
+            return `Title = '${searchQuery}'`;
+          case "maxCookingTime": 
+            return `Time = ${searchQuery} mins, or less`;
+          case "ingredients":
+            return `Ingredients = '${searchQuery}'`
+    }}
+
+    if(!!searchQuery) {
+      if(recipes.length === 1){       
+          return <div ><p className="results-text" >        
+          {`Results for: ${searchTypeToDisplayTxt()}`} </p>
+          <p className="results-text" > {`Found ${totalRecipes} recipe`}</p></div>;
+      } else {        
+          return <div ><p className="results-text" >
+          {`Results for: ${searchTypeToDisplayTxt()}`} </p>
+          <p className="results-text" >  {`Found ${totalRecipes} recipes`}</p></div>;
+      } 
+    } else {
+      return <div ><p className="results-text" >        
+          {`Showing all recipes`}</p>
+          <p className="results-text" > {`Found ${totalRecipes} in total`}</p></div>;
+    }    
+  }
+
   return (
 
     <Container fluid  className='list-container p-0'>
+      <Stack gap={1}>
+        <Form  onSubmit={handleFormSubmit} className="small-screen-ps" noValidate> 
 
-      <Stack gap={3}>
-        <Form  onSubmit={handleFormSubmit}> {/*className="mb-3"*/}
-
-          <Row xs={2} sm={2} md={2} lg={2} className="col-md-9 py-3">
-            <Col xs={8} sm={8} md={8} lg={8}>
+          <Row xs={2} className="col-md-9 pt-3">
+            <Col xs={8} >
               <Form.Control 
-                type={searchType === "maxCookingTime" ? "number" : "text"}
+                type="text"
                 placeholder={`Search by ${searchLabel}`} 
-                value={searchQuery} 
-                onChange={onChangeSearchQuery} 
-                isInvalid={!!errors.maxCookingTime}
-                data-bs-theme={darkOrLightMode()} 
+                value={searchInput} 
+                onChange={onChangeSearchInput} 
+                isInvalid={!!errors.maxCookingTime || !!errors.isEmptyError}
+                isValid={!!valOrSubmit.validation}                
+                data-bs-theme={themeVariants['data-bs-theme']} 
               />
               <Form.Control.Feedback type="invalid">
-                {errors.maxCookingTime}
+                {errors.maxCookingTime || errors.isEmptyError}                
               </Form.Control.Feedback>
+              <Form.Control.Feedback type="valid">
+                {valOrSubmit.validation}              
+              </Form.Control.Feedback>
+              <div className='submittedMessage'>Search Submitted</div>
             </Col>
-            <Col xs={1} sm={3} md={3} lg={3}>
-              <Button variant="primary" type="submit">Search</Button>
+            <Col xs={1} md={3}>
+              <Button 
+                variant="primary" 
+                type="submit" 
+                disabled={searchWhileTyping ||
+                          !!errors.maxCookingTime }
+                          /*|| !!errors.isEmptyError*/ 
+                >Search</Button>
             </Col>
           </Row>          
 
           <Row className="align-items-center col-md-10">
-            <Col xs={12} sm={12} md={6} lg={6}>
+            <Col xs={12} md={6}>
               <p className="ps-2 pb-1 mb-0 small-text">Search Options:</p>
               <Form.Select 
                 value={searchType}
                 onChange={handleSelectChange}      
-                data-bs-theme={darkOrLightMode()}          
+                data-bs-theme={themeVariants['data-bs-theme']}          
               >
                 <option value="title" label="Search by Title">Title</option>
                 <option value="maxCookingTime" label="Search by Max Cooking Time">Max Cooking Time</option>
                 <option value="ingredients" label="Search by Ingredient">Ingredient</option>
               </Form.Select>  
-              
+              <Form.Check 
+                type="switch"
+                id="search-while-typing"
+                label={`Search while typing is: ${searchWhileTyping ? 'On' : 'Off'}`}
+                className='small-text py-2'
+                defaultChecked={searchWhileTyping}
+                onChange={handleSearchWhileTyping}
+                data-bs-theme={themeVariants['data-bs-theme']}   
+              />
             </Col>
           </Row>
-
         </Form>
-
-        <Row >
-         
-        <Col xs={12} sm={12} md={6} lg={6} className="d-flex align-items-center mt-1">
-
-              <Col xs={6} sm={6} md={6} lg={6}>
-              <ThemeProvider theme={theme}> 
+        <Row >         
+        <Col xs={12} md={6} className="d-flex mt-1">
+              <Col xs={6}  className='small-screen-ps'>
                 <Pagination
                   count={count}
                   page={page}
@@ -224,67 +384,100 @@ const RecipeList = () => {
                   color="primary"
                   size="small"
                   variant="outlined"
-                  shape="rounded"                  
+                  shape="rounded"             
                 />
-              </ThemeProvider> 
               </Col>
-              <Col xs={3} sm={3} md={6} lg={6}>
+              <Col xs={6} className='small-screen-ps'>
                 <Form.Select value={pageSize} 
                   onChange={handlePageSizeChange}  
                   className="small-text"
-                  data-bs-theme={darkOrLightMode()}
+                  data-bs-theme={themeVariants['data-bs-theme']}
                 >
                   {pageSizes.map(size => (
-                    <option className="small-text" key={size} value={size}>{size + " items per page"}</option>
+                    <option className="small-text" key={size} value={size}>{size + " items per page"}</option>                    
                   ))}
                 </Form.Select>
-              </Col>
+              </Col>              
           </Col>
-      </Row>
 
-        <Row xs={1} sm={2} md={2} lg={2} className='mb-10'>          
+      </Row>      
+        <Row xs={1} sm={2} className='mb-10'>        
           <Col className="col-md-6">      
+          {searchResultFeedback()}
           <Col xs={12} md={7}><h4 className="ps-2 ">Recipe List</h4></Col> 
-
             <Col>              
-              <ListGroup as="ul">
+              <ListGroup 
+                as="ul" 
+                variant={themeVariants.variant}  
+                data-bs-theme={themeVariants['data-bs-theme']} >
                   {handleNoSearchResults()}
               </ListGroup>
-
             </Col>
-
-          </Col>
-          
+          </Col>          
           <Col className="col-md-6 mt-3 mt-md-0">
             {currentRecipe && (
               <Card
-                  bg={darkOrLightMode()}
-                  key={darkOrLightMode()}
-                  text={darkOrLightMode() === 'light' ? 'dark' : 'white'}
-                  style={{ width: '18rem' }}
-                  className="mb-2"
+                  bg={themeVariants.variant === 'dark' ? 'dark' : ''}
+                  variant={themeVariants.variant}
+                  key={themeVariants.variant}
+                  text={themeVariants.text}
+                  style={{ width: '20rem' }}
+                  className="mb-3 small-screen-ms-ps"
               > 
-                <Card.Header as="h4">Recipe Details</Card.Header>
+                {/* <Card.Header 
+                  as="h4"
+                  variant={themeVariants.variant}  
+                  data-bs-theme={themeVariants['data-bs-theme']}
+                >{currentRecipe.title}</Card.Header> */}
+                <Card.Title 
+                  as="h4"
+                  variant={themeVariants.variant}  
+                  data-bs-theme={themeVariants['data-bs-theme']}
+                  className='recipeCardTitle'
+                >{currentRecipe.title}</Card.Title>
 
-                <Card.Body>
-                  <Card.Title> <b>Title:</b> {currentRecipe.title}</Card.Title>
-
-                  <Card.Text className='mt-3'>
-                    <b>Description:</b> {currentRecipe.description}
+                <Card.Body className='p-2'>
+                  <Card.Text as="h5" className='mt-3 mb-2'>
+                    Description:
                   </Card.Text>
-                  <Card.Text>
-                    <b>Cooking Time:</b> {currentRecipe.description}
-                  </Card.Text>
-                  <Card.Text className='mb-1'>
-                    <b>Ingredients:</b>
-                  </Card.Text>   
-                  <ul className="small-text ps-3">
-                    {currentRecipe.ingredients.map((ingredient) => (
-                        <li key={ingredient.id}>{ingredient}</li>
-                      ))}
-                  </ul>                 
-                               
-                </Card.Body>
+                  <ListGroup  
+                    variant={themeVariants.variant}  
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                    className='mb-3'
+                  > <ListGroup.Item
+                      variant={themeVariants.variant}
+                    >{currentRecipe.description}
+                    </ListGroup.Item>
+                  </ListGroup>                  
+                  <Card.Text as="h5" className='mb-2' >
+                    Cooking Time:
+                  </Card.Text>                  
+                  <ListGroup  
+                    variant={themeVariants.variant}  
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                    className='mb-3'
+                  > 
+                    <ListGroup.Item
+                      variant={themeVariants.variant}
+                    >{currentRecipe.cookingTimeMinutes} minutes
+                    </ListGroup.Item>
+                  </ListGroup>
+                  <Card.Text as="h5" className='mb-2'>
+                    Ingredients:
+                  </Card.Text>         
+                  <ListGroup as="ul" 
+                    className='mb-3'
+                    variant={themeVariants.variant}  
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                  >                    
+                        {currentRecipe.ingredients.map((ingredient, index) => (    
+                          <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+                          key={index}>
+                          • &nbsp; {ingredient}
+                          </ListGroup.Item>
+                        ))}
+                    </ListGroup>   
+                </Card.Body >
                 <Button variant="primary" className="align-self-end mb-3 me-3" >
                     <Link to={`/recipes/${currentRecipe.id}`} className="text-light">
                       View and Edit
@@ -293,8 +486,7 @@ const RecipeList = () => {
               </Card>
             )}
           </Col>
-        </Row>
-
+        </Row>  
       </Stack>
     </Container>
 

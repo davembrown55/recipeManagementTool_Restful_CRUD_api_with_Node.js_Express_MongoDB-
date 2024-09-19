@@ -1,6 +1,4 @@
 import React from "react";
-// import { useParams, useNavigate } from 'react-router-dom';
-// import RecipeDataService from "../services/recipe.service";
 import { Button, Form, ListGroup, Container, Row } from 'react-bootstrap';
 
 
@@ -12,17 +10,18 @@ const IngredientList = ({
   removeIngredient,
   moveIngredientUp,
   moveIngredientDown,
-  darkOrLightMode,
-  darkOrLightVariant
+  themeVariants,
+  errors
+  
 }) => {
 
-  
+
   const UpBtnVisible = (index) => {
     if (index !== 0) {
       return (
         <Button  
           className="xs-btn"
-          variant="outline-info"
+          variant={themeVariants.variant === 'dark' ? "outline-info" : "info"} 
           onClick={() => moveIngredientUp(index)}
         >
           <i className="bi bi-arrow-up-short"></i>
@@ -36,7 +35,7 @@ const IngredientList = ({
       return (
         <Button 
           className="xs-btn mt-1"
-          variant="outline-info"
+          variant={themeVariants.variant === 'dark' ? "outline-info" : "info"}
           onClick={() => moveIngredientDown(index)}
         >
           <i className="bi bi-arrow-down-short"></i>
@@ -45,46 +44,88 @@ const IngredientList = ({
     }
   };
 
+  const ingredientIsVal = (index) => {
+    if (typeof errors.ingredientsError === "undefined") {      
+      return false;
+    }
+    
+    if (typeof errors.ingredientsError[index] === "undefined") {
+      return false;
+    } else if (typeof errors.ingredientsError[index] !== "undefined") {
+      return true;
+    }
+
+    // if (errors.ingredientsError === undefined) {      
+    //   console.log(`errors.ingredientsError : undefined index=${index}`);
+    //   return false;
+    // }
+    
+    // if (errors.ingredientsError[index] === undefined) {
+    //   console.log(`errors.ingredientsError[index] : undefined index=${index}`);
+    //   console.log(`returned false from isInvalid`)
+    //   return false;
+    // } else if (errors.ingredientsError[index] !== undefined) {
+    //   console.log(`errors.ingredientsError[index] : ${errors.ingredientsError[index]} index=${index}`);
+    //   console.log(`returned true from isInvalid`);
+    //   return true;
+    // }
+
+  }
 
     return (
         <Form.Group controlId="Ingredients" className="mb-4">
         <Form.Label className="ps-2">Ingredients</Form.Label>
-        <ListGroup as="ul"         
-          data-bs-theme={darkOrLightMode()}
+        <ListGroup 
+          as="ul"         
+          variant={themeVariants.variant} 
+          data-bs-theme={themeVariants['data-bs-theme']}
           >
         {ingredients.map((ingredient, index) => (
           <ListGroup.Item 
             key={index}
+            variant={themeVariants.variant}
             className="d-flex justify-content-between list-item-cont">
+              
+            <Form.Group className="ingTextArea" >
             <Form.Control 
               as="textarea"
               type="text"      
-              className="w-75"                
               value={ingredient} 
-              data-bs-theme={darkOrLightMode()}
-              onChange={(e) => onChangeIngredients(index, e)}                    
+              data-bs-theme={themeVariants['data-bs-theme']}
+              onChange={(e) => onChangeIngredients(index, e)}        
+              isInvalid={ingredientIsVal(index)}
             >
             </Form.Control>
+            <Form.Control.Feedback type="invalid">
+              {errors.ingredientsError !== undefined && errors.ingredientsError[`${index}`]  }
+            </Form.Control.Feedback> 
+            </Form.Group> 
 
-
+            <Container className="ingControlContainer d-flex p-0">
             <Container className={`arrowContainer d-flex flex-column p-0 ${index === 0 ? 'justify-content-end' : ''}`}>
               {UpBtnVisible(index)}
               {DownBtnVisible(index)}
             </Container>
 
-            <Button   
-              variant={darkOrLightVariant()} 
-              className="smaller-btn"                        
-              onClick={(e) => removeIngredient(index)}
-              >Remove</Button>
-            
+            <Container className="ingBtnContainer">          
+              <Button   
+                variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
+                className="ing-smaller-btn border-0"                   
+                onClick={(e) => removeIngredient(index)}
+                > 
+                  {/* <i className="bi bi-x-octagon h6"></i> */}
+                  <i className="bi bi-trash"></i>
+                </Button>
+            </Container> 
+
+            </Container>
           </ListGroup.Item>                     
           
         ))}
         </ListGroup>
         <Row xs="auto" className="d-flex justify-content-end px-3 my-3">
           <Button 
-            variant="outline-primary" 
+            variant= {themeVariants.variant === 'dark' ? "outline-primary" : "primary"}
             className="smaller-btn"
             onClick={(e) => addIngredient()}
           >Add Ingredient</Button>

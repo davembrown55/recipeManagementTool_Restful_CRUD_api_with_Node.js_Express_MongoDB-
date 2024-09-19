@@ -43,7 +43,7 @@ exports.create = (req, res) => {
 
 const buildCondition = (req) => {
   let condition = {};
-  const { title, ingredients, maxCookingTime } = req.query; 
+  const { title, ingredients, maxCookingTime, } = req.query; 
 
   if (title) {
     condition.title = { $regex: new RegExp(title), $options: "i" };
@@ -53,10 +53,10 @@ const buildCondition = (req) => {
     condition.ingredients = { $elemMatch: { $regex: ingredientStartsWith, $options: "i"} };  
   }
 
-
   if (maxCookingTime) {
     condition.cookingTimeMinutes = { $lte: Number(maxCookingTime) };
   }
+
 
   return condition;
 }

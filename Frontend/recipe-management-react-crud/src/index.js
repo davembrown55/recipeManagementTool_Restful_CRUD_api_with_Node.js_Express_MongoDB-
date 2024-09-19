@@ -1,20 +1,21 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-//import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-
+import { ThemeProvider } from './common/ThemeProvider';
 
 const container = document.getElementById('root');
 const root = createRoot(container); // Create a root.
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter> {/* Wrap App inside BrowserRouter */}
-      <App />
-    </BrowserRouter>
+    <ThemeProvider> {/* Wrap the entire app in ThemeProvider */}
+      <BrowserRouter> {/* Wrap App inside BrowserRouter */}
+        <App />
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 

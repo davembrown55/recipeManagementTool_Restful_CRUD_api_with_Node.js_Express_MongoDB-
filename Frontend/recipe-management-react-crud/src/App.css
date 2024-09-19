@@ -2,7 +2,8 @@
   text-align: center;
 }
 
-.App-logo {
+
+/* .App-logo {
   height: 40vmin;
   pointer-events: none;
 }
@@ -10,10 +11,10 @@
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
-  }
-}
+  } */
+/* } */
 
-.App-header {
+/* .App-header {
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
@@ -22,12 +23,21 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
-}
+} */
 
-.App-link {
+/* .App-link {
   color: #61dafb;
+} */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
+p {
+  margin-bottom: 0;
+}
 .list {
   text-align: left;
   max-width: 750px;
@@ -37,9 +47,30 @@
   max-width: 750px;
   margin: auto;
 }
-
+.list-group-item p {
+  margin-bottom: 0;
+}
 .small-text {
   font-size:small; 
+}
+.submittedMessage {
+  width: 100%;
+  margin-top: .25rem;
+  font-size: .875em;
+  color: var(--bs-form-valid-color);
+  text-align: end;
+  visibility: hidden;
+  opacity: 0;
+  padding-right: 0.25rem;
+}
+.results-text {  
+  font-size:13px; 
+  /* margin-top: 0.25rem; */
+  margin-bottom: 0;
+  padding-left: 0.5rem;
+  text-align: end;
+  padding-right: 0.5rem;
+  
 }
 
 .vr{
@@ -58,7 +89,22 @@
 }
 
 .nav-underline .nav-link.active {
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.navbar-brand {
+  font-weight: 550;
+  padding-bottom: 10.6px;
+}
+
+.navbar-nav {
+  flex-direction: row;
+  align-items: center;
+  padding-left: 1rem;
+}
+
+.page-container {
+  padding: 0;
 }
 
 .smaller-btn {
@@ -76,10 +122,31 @@
   margin-left: 0.3rem;
 }
 
-.arrowContainer {
-  max-width: 30px;
+
+.ingTextArea{
+  min-width:75%;
+}
+.ingControlContainer{
+  max-width: 25%;
 }
 
+.arrowContainer {
+  max-width: 30px;
+  margin-left: 0.3rem;
+}
+
+.ingBtnContainer{
+  padding: 0;
+  margin-left: 0.5rem;
+}
+
+.ing-smaller-btn {
+    /* font-size: 0.8rem; */
+    font-size: 1rem;
+    --bs-btn-padding-x: 0.5rem;
+    --bs-btn-padding-y: 0.25rem;
+    max-height: 2rem;  
+}
 
 .responsive-width-form{
   width:50%
@@ -89,35 +156,75 @@
   padding-left: 0.3rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    color: #eee;
-    background: #180e21;
-  }
 
-  body a {
-    color: #809fff;
-  }
-}
-@media (prefers-color-scheme: light) {
-  body {
-    /* color: #eee; */
-    background: #9bb4aa;
-  }
 
-  body a {
-    /* color: #809fff; */
-  }
+.card-title {
+  padding-left:0;
 }
 
+.small-screen-ps {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
 
+.small-screen-ms-ps {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin: auto;
+
+}
+.card{
+}
+.recipeCard {
+  padding: 0.5rem;
+}
+
+.recipeCardTitle {
+  padding-left:0.25rem;
+  padding-right:0.25rem;
+  margin: 0 auto;
+  padding-top:1rem;  
+  text-align: center;
+}
+.recipeCard .recipeCardTitle {
+  margin: 0;
+  padding-left:0.25rem;
+  padding-top:0.5rem;
+  text-align:left;
+}
+
+.recipeCard .card-body {
+  padding: 0.5rem 0rem;
+}
+
+.rcpMessageTxt{
+  /* color:red; */
+  text-align: center;
+}
+.btnDisableTxt {
+  text-align: center;
+  font-size: .875em;
+  /* margin-bottom: 0; */
+}
+/* .updateMessages p {
+  margin-bottom: 0;
+} */
 
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 
 /*Responsive styles*/
  
    /* Small devices (landscape phones, 576px and up) */
-  @media (min-width: 576px) { 
+  @media (min-width: 576px) {       
+      .ingTextArea{
+        min-width:80%;
+      }
+      .ingControlContainer{
+        max-width: 20%;
+      }
+      .navbar-nav {
+        align-items: center; 
+      }
 
    }
   
@@ -129,11 +236,46 @@
     .smaller-btn {     
       margin-left: 0;
     }
+    .recipeCard {
+      padding: 1rem;
+    }
+    
+    .recipeCard .recipeCardTitle {
+      padding-left:0.5rem;
+      padding-top:1rem; 
+      
+    }
+
+    .recipeCard .card-body {
+      padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
+    }
+    
+    .arrowContainer {
+      margin-left: 1rem;
+    }
+    
+    .ingBtnContainer{
+      margin-left: 1rem;
+    }
+    
+    .small-screen-ps {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .small-screen-ms-ps {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+    
+
    }
   
    /* Large devices (desktops, 992px and up) */
   @media (min-width: 992px) {
-
+    /* .page-container{
+      padding: 0;
+    } */
     }
   
    /* X-Large devices (large desktops, 1200px and up) */
