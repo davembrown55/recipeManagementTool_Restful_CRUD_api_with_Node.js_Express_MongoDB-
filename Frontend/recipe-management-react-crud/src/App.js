@@ -8,7 +8,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 
 import AddRecipe from "./components/add-recipe.component";
-import Recipe from "./components/recipe-new.component";
+import Recipe from "./components/recipe/recipe.component";
 import RecipeList from "./components/recipe-list.component";
 
 import {useTheme} from './common/ThemeProvider';

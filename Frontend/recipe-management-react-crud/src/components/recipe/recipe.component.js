@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import RecipeDataService from "../services/recipe.service";
+import RecipeDataService from "../../services/recipe.service";
 import { useParams, useNavigate } from 'react-router-dom';
 
 import Container from 'react-bootstrap/Container';
@@ -8,8 +8,9 @@ import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Card from 'react-bootstrap/Card';
-import { useTheme} from '../common/ThemeProvider';
+import { useTheme} from '../../common/ThemeProvider';
 import IngredientList from "./ingredient-list.component";
+import InstructionList from "./instruction-list.component";
 
 const Recipe = () => {
   const { id } = useParams();
@@ -29,7 +30,7 @@ const Recipe = () => {
   });
 
   const [message, setMessage] = useState("");
-
+  
   useEffect(() => {
     getRecipe(id);
   }, [id]);
@@ -63,7 +64,7 @@ const Recipe = () => {
     if (title.trim().length === 0 ){
       validationErrors.titleError = 'Field Empty';
     } 
-    setErrors(validationErrors);
+    setErrors(validationErrors);    
   };
 
   const onChangeDescription = (e) => {
@@ -174,6 +175,85 @@ const Recipe = () => {
   }
 
 
+const onChangeInstructions = (index, e) => {
+  const newInstruction = e.target.value;
+   // Update the instructions array
+  const newInstructions = currentRecipe.instructions.map((instruction, i) => {
+    return i === index ? newInstruction : instruction;
+  });
+  setCurrentRecipe({ ...currentRecipe, instructions: newInstructions });
+  
+  // Destructure errors, excluding the specific instructionError object and add to validationErrors    
+  const { instructionsError = {}, ...validationErrors } = errors ;
+
+  // Create a copy of instructionsError without any current index errors
+  const { [`${index}`]: removedError, ...newInstructionsError } = instructionsError || {};
+
+  const newInstructionErrorEmpty = Object.keys(newInstructionsError).length === 0;
+
+  if (newInstruction.trim().length === 0) {
+    // Failed validation add new error to validationErrors.instructionsError
+    validationErrors.instructionsError = { ...newInstructionsError, [index]: 'Field Empty' };
+  } else if (!newInstructionErrorEmpty && newInstruction.trim().length > 0) {
+    // passed validation and there are other existing instructionErrors. 
+    // replace validationErrors.instructionsError ensuring no error messages for this index.
+    validationErrors.instructionsError = newInstructionsError; 
+  }
+
+  setErrors(validationErrors);
+}
+
+const removeInstruction = (index) => {
+  if(currentRecipe.instructions.length > 0) {
+    if(window.confirm("Are you sure you want to remove this instruction?")) {
+      const newInstructions = currentRecipe.instructions.filter((instruction, i) => i !== index);  
+      setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
+    }
+  }
+}
+
+const addInstruction = () => {
+  if(currentRecipe.instructions.length > 0 && 
+  currentRecipe.instructions[currentRecipe.instructions.length -1].trim() !== "" ) {
+    const newInstructions = [... currentRecipe.instructions, ""];
+    setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
+  } else {
+    alert("Please fill in the last instruction before adding a new one.");
+  }
+}
+
+
+const moveInstructionUp = (index) => {    
+  if(currentRecipe.instructions[index].trim() !== ""){
+    const toMoveUp = currentRecipe.instructions[index];
+    const toMoveHere = currentRecipe.instructions[index -1];
+    const newInstructions = [... currentRecipe.instructions];
+
+    newInstructions[index-1] = toMoveUp;
+    newInstructions[index] = toMoveHere;      
+    setCurrentRecipe({...currentRecipe, instructions: newInstructions});      
+  } else {
+    alert("There is no instruction here yet.")
+  }
+  
+}  
+
+const moveInstructionDown = (index) => {
+  if(currentRecipe.instructions[index].trim() !== ""){
+    const toMoveDown = currentRecipe.instructions[index];
+    const toMoveHere = currentRecipe.instructions[index +1];
+    const newInstructions = [... currentRecipe.instructions];
+
+    newInstructions[index+1] = toMoveDown;
+    newInstructions[index] = toMoveHere;  
+    setCurrentRecipe({...currentRecipe, instructions: newInstructions});      
+  } else {
+    alert("There is no instruction here yet.")
+  }
+}
+
+//
+
 
   const getRecipe = (id) => {
     RecipeDataService.get(id)
@@ -181,6 +261,9 @@ const Recipe = () => {
         const recipe = response.data;
         if (!Array.isArray(recipe.ingredients)) {
           recipe.ingredients = [""];
+        }
+        if (!Array.isArray(recipe.instructions)) {
+          recipe.instructions = [""];
         }
         setCurrentRecipe(recipe);
         console.log(response.data);
@@ -240,6 +323,8 @@ const Recipe = () => {
   const { themeVariants } = useTheme(); 
 
   const btnDisabledTxt = () => {
+    if (Object.keys(errors).length === 0){}
+
     if (Object.keys(errors).length > 0) {
       let valFailMessage = {errMess: "Update Disabled. Please amend:"};
 
@@ -261,10 +346,17 @@ const Recipe = () => {
               valFailMessage[newKey] = `Ingredient (${(ixInList)}): ${value}`;
             }
             break;
+          case 'instructionsError': 
+            for (const [key, value] of Object.entries(errors.instructionsError)) {
+              let ixInList = parseInt(key) + 1;
+              let newKey = `instructions${key}Error`
+              valFailMessage[newKey] = `Instruction (${(ixInList)}): ${value}`;
+            }
+            break;
         }
       }
       return  Object.keys(valFailMessage).map((item,index) => {
-        return (<p>{valFailMessage[item]}</p>)
+        return (<p key={index} >{valFailMessage[item]}</p>)
       })
     }
   }
@@ -339,13 +431,20 @@ const Recipe = () => {
                     removeIngredient={removeIngredient}
                     moveIngredientUp={moveIngredientUp}
                     moveIngredientDown={moveIngredientDown}
-                    // darkOrLightMode={darkOrLightMode}
                     themeVariants={themeVariants}
                     errors={errors}
                   />
 
-
-                
+                <InstructionList 
+                    instructions={currentRecipe.instructions}
+                    onChangeInstructions={onChangeInstructions}
+                    addInstruction={addInstruction}
+                    removeInstruction={removeInstruction}
+                    moveInstructionUp={moveInstructionUp}
+                    moveInstructionDown={moveInstructionDown}
+                    themeVariants={themeVariants}
+                    errors={errors}
+                  />
 
                 <Form.Group className="mb-5">
                   <Form.Label className="ps-2">Status</Form.Label>
