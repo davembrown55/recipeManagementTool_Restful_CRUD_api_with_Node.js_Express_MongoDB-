@@ -1,6 +1,6 @@
-import React from "react";
-import { Button, Form, ListGroup, Container, Row } from 'react-bootstrap';
-
+import React, {useState} from "react";
+import { Button, Form, ListGroup, Container, Row, ModalDialog } from 'react-bootstrap';
+import Modal from 'react-bootstrap/Modal';
 
 
 const IngredientList = ({
@@ -12,6 +12,11 @@ const IngredientList = ({
   errors
   
 }) => {
+
+  const [removeIng, setRemoveIng] = useState(false);
+  const [nothingToMove, setNothingToMove] = useState(false);
+  const [stopAddIngModal, setStopAddIngModal] = useState(false); 
+  const [currentIndex, setcurrentIndex] = useState(null);
 
   const onChangeIngredients = (index, e) => {
     const newIngredient = e.target.value;
@@ -40,15 +45,27 @@ const IngredientList = ({
 
     setErrors(validationErrors);
   }
+  const showRemoveIngModal = (index) => { 
+    setcurrentIndex(index);
+    setRemoveIng(true);
+  }
+  const hideRemoveIngModal = () => setRemoveIng(false);
 
   const removeIngredient = (index) => {
-    if(currentRecipe.ingredients.length > 0) {
-      if(window.confirm("Are you sure you want to remove this ingredient?")) {
-        const newIngredients = currentRecipe.ingredients.filter((ingredient, i) => i !== index);  
+      if(currentRecipe.ingredients.length > 0) {        
+        const newIngredients = currentRecipe.ingredients.filter((ingredient, i) => i !== currentIndex);  
         setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
+        hideRemoveIngModal();
+        setcurrentIndex(null);
       }
-    }
   }
+ 
+
+  const showStopAddIngModal = () => { 
+    setStopAddIngModal(true);
+  };
+
+  const hideStopAddIngModal = () => setStopAddIngModal(false);
 
   const addIngredient = () => {
     if(currentRecipe.ingredients.length > 0 && 
@@ -56,9 +73,15 @@ const IngredientList = ({
       const newIngredients = [... currentRecipe.ingredients, ""];
       setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
     } else {
-      alert("Please fill in the last ingredient before adding a new one.");
+      showStopAddIngModal();
     }
   }
+
+  const showNothingToMoveModal = (index) => { 
+    setcurrentIndex(index);
+    setNothingToMove(true);
+  }
+  const hideNothingToMoveModal = () => setNothingToMove(false);
 
   const moveIngredientUp = (index) => {    
     if(currentRecipe.ingredients[index].trim() !== ""){
@@ -70,7 +93,7 @@ const IngredientList = ({
       newIngredients[index] = toMoveHere;      
       setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
     } else {
-      alert("There is no ingredient here yet.")
+      showNothingToMoveModal(index);
     }
     
   }  
@@ -85,7 +108,7 @@ const IngredientList = ({
       newIngredients[index] = toMoveHere;  
       setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
     } else {
-      alert("There is no ingredient here yet.")
+      showNothingToMoveModal(index);
     }
   }
 
@@ -165,17 +188,59 @@ const IngredientList = ({
             <Container className={`arrowContainer d-flex flex-column p-0 ${index === 0 ? 'justify-content-end' : ''}`}>
               {UpBtnVisible(index)}
               {DownBtnVisible(index)}
+
+              <Modal
+                  show={nothingToMove}
+                  onHide={hideNothingToMoveModal}
+                  backdrop="static"
+                  keyboard={false}
+                  data-bs-theme={themeVariants['data-bs-theme']}       
+                  className={themeVariants.variant}
+                >
+                  <Modal.Header  closeButton >
+                    <Modal.Title >Can't move Ingredient</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body >
+                    There is no ingredient to move there.
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button variant="primary" onClick={hideNothingToMoveModal}>
+                      OK
+                    </Button>
+                  </Modal.Footer>
+                </Modal>
             </Container>
 
             <Container className="ingBtnContainer">          
               <Button   
                 variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
-                className="ing-smaller-btn border-0"                   
-                onClick={(e) => removeIngredient(index)}
+                className="ing-smaller-btn border-0"      
+                onClick={(e) => showRemoveIngModal(index)}
                 > 
-                  {/* <i className="bi bi-x-octagon h6"></i> */}
                   <i className="bi bi-trash"></i>
                 </Button>
+
+                <Modal
+                  show={removeIng}
+                  onHide={hideRemoveIngModal}
+                  backdrop="static"
+                  keyboard={false}
+                  data-bs-theme={themeVariants['data-bs-theme']}       
+                  className={themeVariants.variant}
+                >
+                  <Modal.Header  closeButton >
+                    <Modal.Title >Remove Ingredient</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body >
+                    Are you sure you want to remove '{currentRecipe.ingredients[currentIndex]}'?
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button variant="secondary" onClick={hideRemoveIngModal}>
+                      Close
+                    </Button>
+                    <Button variant="primary" onClick={(e) => removeIngredient()}>Yes</Button>
+                  </Modal.Footer>
+                </Modal>
             </Container> 
 
             </Container>
@@ -189,6 +254,27 @@ const IngredientList = ({
             className="smaller-btn"
             onClick={(e) => addIngredient()}
           >Add Ingredient</Button>
+
+            <Modal
+              show={stopAddIngModal}
+              onHide={hideStopAddIngModal}
+              backdrop="static"
+              keyboard={false}
+              data-bs-theme={themeVariants['data-bs-theme']}       
+              className={themeVariants.variant}
+            >
+              <Modal.Header  closeButton >
+                <Modal.Title >Can't move Ingredient</Modal.Title>
+              </Modal.Header>
+              <Modal.Body >
+                Please fill in the last ingredient before adding a new one
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="primary" onClick={hideStopAddIngModal}>
+                  OK
+                </Button>
+              </Modal.Footer>
+            </Modal>
           
         </Row>
       </Form.Group>
