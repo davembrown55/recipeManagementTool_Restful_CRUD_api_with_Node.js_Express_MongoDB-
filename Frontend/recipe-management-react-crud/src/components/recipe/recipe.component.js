@@ -11,6 +11,7 @@ import Card from 'react-bootstrap/Card';
 import { useTheme} from '../../common/ThemeProvider';
 import IngredientList from "./ingredient-list.component";
 import InstructionList from "./instruction-list.component";
+import DietsList from "./diet-list.component";
 
 const Recipe = () => {
   const { id } = useParams();
@@ -25,12 +26,13 @@ const Recipe = () => {
     published: false,
     cookingTimeMinutes: 0,
     ingredients: [""],
-    instructions: [""]
+    instructions: [""], 
+    diets: [""]
 
   });
 
   const [message, setMessage] = useState("");
-  
+
   useEffect(() => {
     getRecipe(id);
   }, [id]);
@@ -95,166 +97,7 @@ const Recipe = () => {
 
     setErrors(validationErrors);
   };
-
-
-  const onChangeIngredients = (index, e) => {
-    const newIngredient = e.target.value;
-     // Update the ingredients array
-    const newIngredients = currentRecipe.ingredients.map((ingredient, i) => {
-      return i === index ? newIngredient : ingredient;
-    });
-    setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients });
-
-    // Destructure errors, excluding the specific ingredientError object and add to validationErrors    
-    const { ingredientsError = {}, ...validationErrors } = errors ;
-
-    // Create a copy of ingredientsError without any current index errors
-    const { [`${index}`]: removedError, ...newIngredientsError } = ingredientsError || {};
-
-    const newIngredientErrorEmpty = Object.keys(newIngredientsError).length === 0;
-
-    if (newIngredient.trim().length === 0) {
-      // Failed validation add new error to validationErrors.ingredientsError
-      validationErrors.ingredientsError = { ...newIngredientsError, [index]: 'Field Empty' };
-    } else if (!newIngredientErrorEmpty && newIngredient.trim().length > 0) {
-      // passed validation and there are other existing ingredientErrors. 
-      // replace validationErrors.ingredientsError ensuring no error messages for this index.
-      validationErrors.ingredientsError = newIngredientsError; 
-    }
-
-    setErrors(validationErrors);
-  }
-
-  const removeIngredient = (index) => {
-    if(currentRecipe.ingredients.length > 0) {
-      if(window.confirm("Are you sure you want to remove this ingredient?")) {
-        const newIngredients = currentRecipe.ingredients.filter((ingredient, i) => i !== index);  
-        setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
-      }
-    }
-  }
-
-  const addIngredient = () => {
-    if(currentRecipe.ingredients.length > 0 && 
-    currentRecipe.ingredients[currentRecipe.ingredients.length -1].trim() !== "" ) {
-      const newIngredients = [... currentRecipe.ingredients, ""];
-      setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
-    } else {
-      alert("Please fill in the last ingredient before adding a new one.");
-    }
-  }
-
-
-  const moveIngredientUp = (index) => {    
-    if(currentRecipe.ingredients[index].trim() !== ""){
-      const toMoveUp = currentRecipe.ingredients[index];
-      const toMoveHere = currentRecipe.ingredients[index -1];
-      const newIngredients = [... currentRecipe.ingredients];
-
-      newIngredients[index-1] = toMoveUp;
-      newIngredients[index] = toMoveHere;      
-      setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
-    } else {
-      alert("There is no ingredient here yet.")
-    }
-    
-  }  
-
-  const moveIngredientDown = (index) => {
-    if(currentRecipe.ingredients[index].trim() !== ""){
-      const toMoveDown = currentRecipe.ingredients[index];
-      const toMoveHere = currentRecipe.ingredients[index +1];
-      const newIngredients = [... currentRecipe.ingredients];
-
-      newIngredients[index+1] = toMoveDown;
-      newIngredients[index] = toMoveHere;  
-      setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
-    } else {
-      alert("There is no ingredient here yet.")
-    }
-  }
-
-
-const onChangeInstructions = (index, e) => {
-  const newInstruction = e.target.value;
-   // Update the instructions array
-  const newInstructions = currentRecipe.instructions.map((instruction, i) => {
-    return i === index ? newInstruction : instruction;
-  });
-  setCurrentRecipe({ ...currentRecipe, instructions: newInstructions });
   
-  // Destructure errors, excluding the specific instructionError object and add to validationErrors    
-  const { instructionsError = {}, ...validationErrors } = errors ;
-
-  // Create a copy of instructionsError without any current index errors
-  const { [`${index}`]: removedError, ...newInstructionsError } = instructionsError || {};
-
-  const newInstructionErrorEmpty = Object.keys(newInstructionsError).length === 0;
-
-  if (newInstruction.trim().length === 0) {
-    // Failed validation add new error to validationErrors.instructionsError
-    validationErrors.instructionsError = { ...newInstructionsError, [index]: 'Field Empty' };
-  } else if (!newInstructionErrorEmpty && newInstruction.trim().length > 0) {
-    // passed validation and there are other existing instructionErrors. 
-    // replace validationErrors.instructionsError ensuring no error messages for this index.
-    validationErrors.instructionsError = newInstructionsError; 
-  }
-
-  setErrors(validationErrors);
-}
-
-const removeInstruction = (index) => {
-  if(currentRecipe.instructions.length > 0) {
-    if(window.confirm("Are you sure you want to remove this instruction?")) {
-      const newInstructions = currentRecipe.instructions.filter((instruction, i) => i !== index);  
-      setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
-    }
-  }
-}
-
-const addInstruction = () => {
-  if(currentRecipe.instructions.length > 0 && 
-  currentRecipe.instructions[currentRecipe.instructions.length -1].trim() !== "" ) {
-    const newInstructions = [... currentRecipe.instructions, ""];
-    setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
-  } else {
-    alert("Please fill in the last instruction before adding a new one.");
-  }
-}
-
-
-const moveInstructionUp = (index) => {    
-  if(currentRecipe.instructions[index].trim() !== ""){
-    const toMoveUp = currentRecipe.instructions[index];
-    const toMoveHere = currentRecipe.instructions[index -1];
-    const newInstructions = [... currentRecipe.instructions];
-
-    newInstructions[index-1] = toMoveUp;
-    newInstructions[index] = toMoveHere;      
-    setCurrentRecipe({...currentRecipe, instructions: newInstructions});      
-  } else {
-    alert("There is no instruction here yet.")
-  }
-  
-}  
-
-const moveInstructionDown = (index) => {
-  if(currentRecipe.instructions[index].trim() !== ""){
-    const toMoveDown = currentRecipe.instructions[index];
-    const toMoveHere = currentRecipe.instructions[index +1];
-    const newInstructions = [... currentRecipe.instructions];
-
-    newInstructions[index+1] = toMoveDown;
-    newInstructions[index] = toMoveHere;  
-    setCurrentRecipe({...currentRecipe, instructions: newInstructions});      
-  } else {
-    alert("There is no instruction here yet.")
-  }
-}
-
-//
-
-
   const getRecipe = (id) => {
     RecipeDataService.get(id)
       .then((response) => {
@@ -426,22 +269,33 @@ const moveInstructionDown = (index) => {
 
                 <IngredientList 
                     ingredients={currentRecipe.ingredients}
-                    onChangeIngredients={onChangeIngredients}
-                    addIngredient={addIngredient}
-                    removeIngredient={removeIngredient}
-                    moveIngredientUp={moveIngredientUp}
-                    moveIngredientDown={moveIngredientDown}
+                    currentRecipe={currentRecipe}
+                    setCurrentRecipe={setCurrentRecipe}     
+                    setErrors={setErrors}
                     themeVariants={themeVariants}
                     errors={errors}
                   />
 
                 <InstructionList 
+                    currentRecipe={currentRecipe}
+                    setCurrentRecipe={setCurrentRecipe}
                     instructions={currentRecipe.instructions}
-                    onChangeInstructions={onChangeInstructions}
-                    addInstruction={addInstruction}
-                    removeInstruction={removeInstruction}
-                    moveInstructionUp={moveInstructionUp}
-                    moveInstructionDown={moveInstructionDown}
+                    setErrors={setErrors}
+
+                    // onChangeInstructions={onChangeInstructions}
+                    // addInstruction={addInstruction}
+                    // removeInstruction={removeInstruction}
+                    // moveInstructionUp={moveInstructionUp}
+                    // moveInstructionDown={moveInstructionDown}
+
+                    themeVariants={themeVariants}
+                    errors={errors}
+                  />
+
+                <DietsList 
+                    currentRecipe={currentRecipe}
+                    setCurrentRecipe={setCurrentRecipe}
+                    diets={currentRecipe.diets}
                     themeVariants={themeVariants}
                     errors={errors}
                   />

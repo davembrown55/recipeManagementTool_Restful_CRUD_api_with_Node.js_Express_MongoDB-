@@ -24,6 +24,7 @@ exports.create = (req, res) => {
         ingredients: req.body.ingredients,
         instructions: req.body.instructions,
         cookingTimeMinutes: req.body.cookingTimeMinutes,
+        diets: req.body.diets,
         published: req.body.published ? req.body.published : false
     });
 
@@ -56,8 +57,6 @@ const buildCondition = (req) => {
   if (maxCookingTime) {
     condition.cookingTimeMinutes = { $lte: Number(maxCookingTime) };
   }
-
-
   return condition;
 }
 

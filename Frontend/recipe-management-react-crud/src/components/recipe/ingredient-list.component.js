@@ -5,15 +5,89 @@ import { Button, Form, ListGroup, Container, Row } from 'react-bootstrap';
 
 const IngredientList = ({
   ingredients,
-  onChangeIngredients,
-  addIngredient,
-  removeIngredient,
-  moveIngredientUp,
-  moveIngredientDown,
+  currentRecipe,
+  setCurrentRecipe,
+  setErrors,
   themeVariants,
   errors
   
 }) => {
+
+  const onChangeIngredients = (index, e) => {
+    const newIngredient = e.target.value;
+     // Update the ingredients array
+    const newIngredients = currentRecipe.ingredients.map((ingredient, i) => {
+      return i === index ? newIngredient : ingredient;
+    });
+    setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients });
+
+    // Destructure errors, excluding the specific ingredientError object and add to validationErrors    
+    const { ingredientsError = {}, ...validationErrors } = errors ;
+
+    // Create a copy of ingredientsError without any current index errors
+    const { [`${index}`]: removedError, ...newIngredientsError } = ingredientsError || {};
+
+    const newIngredientErrorEmpty = Object.keys(newIngredientsError).length === 0;
+
+    if (newIngredient.trim().length === 0) {
+      // Failed validation add new error to validationErrors.ingredientsError
+      validationErrors.ingredientsError = { ...newIngredientsError, [index]: 'Field Empty' };
+    } else if (!newIngredientErrorEmpty && newIngredient.trim().length > 0) {
+      // passed validation and there are other existing ingredientErrors. 
+      // replace validationErrors.ingredientsError ensuring no error messages for this index.
+      validationErrors.ingredientsError = newIngredientsError; 
+    }
+
+    setErrors(validationErrors);
+  }
+
+  const removeIngredient = (index) => {
+    if(currentRecipe.ingredients.length > 0) {
+      if(window.confirm("Are you sure you want to remove this ingredient?")) {
+        const newIngredients = currentRecipe.ingredients.filter((ingredient, i) => i !== index);  
+        setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
+      }
+    }
+  }
+
+  const addIngredient = () => {
+    if(currentRecipe.ingredients.length > 0 && 
+    currentRecipe.ingredients[currentRecipe.ingredients.length -1].trim() !== "" ) {
+      const newIngredients = [... currentRecipe.ingredients, ""];
+      setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
+    } else {
+      alert("Please fill in the last ingredient before adding a new one.");
+    }
+  }
+
+  const moveIngredientUp = (index) => {    
+    if(currentRecipe.ingredients[index].trim() !== ""){
+      const toMoveUp = currentRecipe.ingredients[index];
+      const toMoveHere = currentRecipe.ingredients[index -1];
+      const newIngredients = [... currentRecipe.ingredients];
+
+      newIngredients[index-1] = toMoveUp;
+      newIngredients[index] = toMoveHere;      
+      setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
+    } else {
+      alert("There is no ingredient here yet.")
+    }
+    
+  }  
+
+  const moveIngredientDown = (index) => {
+    if(currentRecipe.ingredients[index].trim() !== ""){
+      const toMoveDown = currentRecipe.ingredients[index];
+      const toMoveHere = currentRecipe.ingredients[index +1];
+      const newIngredients = [... currentRecipe.ingredients];
+
+      newIngredients[index+1] = toMoveDown;
+      newIngredients[index] = toMoveHere;  
+      setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
+    } else {
+      alert("There is no ingredient here yet.")
+    }
+  }
 
 
   const UpBtnVisible = (index) => {

@@ -4,8 +4,9 @@ module.exports = (mongoose, mongoosePaginate) => {
             title: String,
             description: String,
             ingredients: Array,
-            instructions: Array,
+            instructions: Array,            
             cookingTimeMinutes: Number,
+            diets: Array,
             published: Boolean
 
         },

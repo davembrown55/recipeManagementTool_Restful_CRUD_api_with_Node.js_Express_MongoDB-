@@ -476,7 +476,28 @@ const RecipeList = () => {
                           • &nbsp; {ingredient}
                           </ListGroup.Item>
                         ))}
-                    </ListGroup>   
+                  </ListGroup>   
+                  <Card.Text as="h5" className='mb-2'>
+                    Diet Type:
+                  </Card.Text>         
+                  <ListGroup as="ul" 
+                    className='mb-3'
+                    variant={themeVariants.variant}  
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                  >                    
+                        {currentRecipe.diets.length === 0 || typeof currentRecipe.diets === "undefined"  ? 
+                          <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+                            >No diet type associated with this recipe
+                          </ListGroup.Item> :
+                          currentRecipe.diets.map((diet, index) => (    
+                            <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+                            key={index}>
+                              • &nbsp; {diet}
+                            </ListGroup.Item>
+                          ))                         
+                        }
+                  </ListGroup>   
+
                 </Card.Body >
                 <Button variant="primary" className="align-self-end mb-3 me-3" >
                     <Link to={`/recipes/${currentRecipe.id}`} className="text-light">

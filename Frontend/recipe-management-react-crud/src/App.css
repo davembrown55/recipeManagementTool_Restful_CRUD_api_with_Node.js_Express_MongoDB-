@@ -99,6 +99,8 @@ p {
 .ingTextArea{
   min-width:75%;
 }
+
+
 .ingControlContainer{
   max-width: 25%;
 }
@@ -130,6 +132,19 @@ p {
 
 .responsive-width-form{
   width:50%
+}
+.dietSelectArea {
+  min-width:80%;
+  display:flex;
+  align-items:flex-start;
+  flex-direction: column;
+
+}
+
+.dietSelect {
+  width:100%;
+  margin-left: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .list-item-cont {
@@ -212,8 +227,9 @@ p {
    /* Medium devices (tablets, 768px and up) */
   @media (min-width: 768px) {
     .responsive-width-form{
-      width:25%
+      width:25%;
     }
+    
     .smaller-btn {     
       margin-left: 0;
     }
@@ -247,6 +263,19 @@ p {
     .small-screen-ms-ps {
       padding-left: 0.5rem;
       padding-right: 0.5rem;
+    }
+
+    .dietSelectArea {
+      min-width:75%;
+      display:flex;
+      align-items:center;
+      flex-direction: row;
+    
+    }
+    .dietSelect {
+      width:50%;
+      margin-left: 1rem;
+      margin-top: 0;
     }
     
 
