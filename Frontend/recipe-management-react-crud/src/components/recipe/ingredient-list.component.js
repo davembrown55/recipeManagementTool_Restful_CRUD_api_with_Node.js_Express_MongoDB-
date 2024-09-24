@@ -13,8 +13,8 @@ const IngredientList = ({
   
 }) => {
 
-  const [removeIng, setRemoveIng] = useState(false);
-  const [nothingToMove, setNothingToMove] = useState(false);
+  const [removeIngModal, setRemoveIngModal] = useState(false);
+  const [nothingToMoveModal, setNothingToMoveModal] = useState(false);
   const [stopAddIngModal, setStopAddIngModal] = useState(false); 
   const [currentIndex, setcurrentIndex] = useState(null);
 
@@ -46,10 +46,10 @@ const IngredientList = ({
     setErrors(validationErrors);
   }
   const showRemoveIngModal = (index) => { 
-    setcurrentIndex(index);
-    setRemoveIng(true);
+      setcurrentIndex(index);
+      setRemoveIngModal(true);
   }
-  const hideRemoveIngModal = () => setRemoveIng(false);
+  const hideRemoveIngModal = () => setRemoveIngModal(false);
 
   const removeIngredient = (index) => {
       if(currentRecipe.ingredients.length > 0) {        
@@ -68,8 +68,9 @@ const IngredientList = ({
   const hideStopAddIngModal = () => setStopAddIngModal(false);
 
   const addIngredient = () => {
-    if(currentRecipe.ingredients.length > 0 && 
-    currentRecipe.ingredients[currentRecipe.ingredients.length -1].trim() !== "" ) {
+    if((currentRecipe.ingredients.length > 0 && 
+    currentRecipe.ingredients[currentRecipe.ingredients.length -1].trim() !== "") 
+     || currentRecipe.ingredients.length === 0 ) {
       const newIngredients = [... currentRecipe.ingredients, ""];
       setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
     } else {
@@ -77,38 +78,40 @@ const IngredientList = ({
     }
   }
 
-  const showNothingToMoveModal = (index) => { 
-    setcurrentIndex(index);
-    setNothingToMove(true);
+  const showNothingToMoveModal = () => { 
+    // setcurrentIndex(index);
+    setNothingToMoveModal(true);
   }
-  const hideNothingToMoveModal = () => setNothingToMove(false);
+  const hideNothingToMoveModal = () => setNothingToMoveModal(false);
 
   const moveIngredientUp = (index) => {    
-    if(currentRecipe.ingredients[index].trim() !== ""){
+    if(currentRecipe.ingredients[index].trim() === "" ||
+    currentRecipe.ingredients[index -1].trim() === ""){
+      showNothingToMoveModal(index);     
+    } else {
       const toMoveUp = currentRecipe.ingredients[index];
       const toMoveHere = currentRecipe.ingredients[index -1];
       const newIngredients = [... currentRecipe.ingredients];
 
       newIngredients[index-1] = toMoveUp;
       newIngredients[index] = toMoveHere;      
-      setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
-    } else {
-      showNothingToMoveModal(index);
+      setCurrentRecipe({...currentRecipe, ingredients: newIngredients}); 
     }
     
   }  
 
   const moveIngredientDown = (index) => {
-    if(currentRecipe.ingredients[index].trim() !== ""){
+    if(currentRecipe.ingredients[index].trim() === "" ||
+    currentRecipe.ingredients[index +1].trim() === ""){
+      showNothingToMoveModal(index);     
+    } else {
       const toMoveDown = currentRecipe.ingredients[index];
       const toMoveHere = currentRecipe.ingredients[index +1];
       const newIngredients = [... currentRecipe.ingredients];
 
       newIngredients[index+1] = toMoveDown;
       newIngredients[index] = toMoveHere;  
-      setCurrentRecipe({...currentRecipe, ingredients: newIngredients});      
-    } else {
-      showNothingToMoveModal(index);
+      setCurrentRecipe({...currentRecipe, ingredients: newIngredients}); 
     }
   }
 
@@ -190,18 +193,19 @@ const IngredientList = ({
               {DownBtnVisible(index)}
 
               <Modal
-                  show={nothingToMove}
+                  show={nothingToMoveModal}
                   onHide={hideNothingToMoveModal}
                   backdrop="static"
                   keyboard={false}
                   data-bs-theme={themeVariants['data-bs-theme']}       
                   className={themeVariants.variant}
+                  centered
                 >
                   <Modal.Header  closeButton >
-                    <Modal.Title >Can't move Ingredient</Modal.Title>
+                    <Modal.Title >Unable to move Ingredient</Modal.Title>
                   </Modal.Header>
                   <Modal.Body >
-                    There is no ingredient to move there.
+                    Field Empty. Please add ingredient before moving.
                   </Modal.Body>
                   <Modal.Footer>
                     <Button variant="primary" onClick={hideNothingToMoveModal}>
@@ -221,18 +225,23 @@ const IngredientList = ({
                 </Button>
 
                 <Modal
-                  show={removeIng}
+                  show={removeIngModal}
                   onHide={hideRemoveIngModal}
                   backdrop="static"
                   keyboard={false}
                   data-bs-theme={themeVariants['data-bs-theme']}       
                   className={themeVariants.variant}
+                  centered
                 >
                   <Modal.Header  closeButton >
                     <Modal.Title >Remove Ingredient</Modal.Title>
                   </Modal.Header>
                   <Modal.Body >
-                    Are you sure you want to remove '{currentRecipe.ingredients[currentIndex]}'?
+                    {typeof  currentRecipe.ingredients[currentIndex] === "undefined" ? 
+                    `Are you sure you want to remove this ingredient` 
+                      : currentRecipe.ingredients[currentIndex].trim().length === 0 ? 
+                        `Are you sure you want to remove this ingredient` :  
+                        `Are you sure you want to remove '${currentRecipe.ingredients[currentIndex]}'?`}                   
                   </Modal.Body>
                   <Modal.Footer>
                     <Button variant="secondary" onClick={hideRemoveIngModal}>
@@ -262,12 +271,13 @@ const IngredientList = ({
               keyboard={false}
               data-bs-theme={themeVariants['data-bs-theme']}       
               className={themeVariants.variant}
+              centered
             >
               <Modal.Header  closeButton >
-                <Modal.Title >Can't move Ingredient</Modal.Title>
+                <Modal.Title >Unable to add Ingredient</Modal.Title>
               </Modal.Header>
               <Modal.Body >
-                Please fill in the last ingredient before adding a new one
+                Please fill in the last ingredient field before adding a new one
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="primary" onClick={hideStopAddIngModal}>

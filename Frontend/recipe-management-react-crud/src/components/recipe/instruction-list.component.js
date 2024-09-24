@@ -1,5 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import { Button, Form, ListGroup, Container, Row } from 'react-bootstrap';
+import Modal from 'react-bootstrap/Modal';
 
 
 
@@ -8,18 +9,16 @@ const InstructionList = ({
     setCurrentRecipe,
     instructions,
     setErrors,
-
-    // onChangeInstructions,
-    // addInstruction,
-    // removeInstruction,
-    // moveInstructionUp,
-    // moveInstructionDown,
-
     themeVariants,
     errors
 
   
 }) => {
+
+  const [removeInstModal, setRemoveInstModal] = useState(false);
+  const [nothingToMoveModal, setNothingToMoveModal] = useState(false);
+  const [stopAddInstModal, setStopAddInstModal] = useState(false); 
+  const [currentIndex, setcurrentIndex] = useState(null);
 
   const onChangeInstructions = (index, e) => {
     const newInstruction = e.target.value;
@@ -48,53 +47,76 @@ const InstructionList = ({
   
     setErrors(validationErrors);
   }
+
+  const showRemoveInstModal = (index) => { 
+    setcurrentIndex(index);
+    setRemoveInstModal(true);
+  }
+  const hideRemoveInstModal = () => setRemoveInstModal(false);
+
   
   const removeInstruction = (index) => {
     if(currentRecipe.instructions.length > 0) {
-      if(window.confirm("Are you sure you want to remove this instruction?")) {
-        const newInstructions = currentRecipe.instructions.filter((instruction, i) => i !== index);  
-        setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
-      }
+      const newInstructions = currentRecipe.instructions.filter((instruction, i) => i !== currentIndex);  
+      setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
+      
+      hideRemoveInstModal();
+      setcurrentIndex(null);
     }
   }
+
+  const showStopAddInstModal = () =>  setStopAddInstModal(true);  
+  const hideStopAddInstModal = () => setStopAddInstModal(false);
+
   
   const addInstruction = () => {
     if(currentRecipe.instructions.length > 0 && 
-    currentRecipe.instructions[currentRecipe.instructions.length -1].trim() !== "" ) {
+    currentRecipe.instructions[currentRecipe.instructions.length -1].trim() !== "" 
+    || currentRecipe.ingredients.length === 0 ) {
       const newInstructions = [... currentRecipe.instructions, ""];
       setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
     } else {
-      alert("Please fill in the last instruction before adding a new one.");
-    }
+      showStopAddInstModal();
+        }
   }
+
+  const showNothingToMoveModal = () => { 
+    // setcurrentIndex(index);
+    setNothingToMoveModal(true);
+  }
+  const hideNothingToMoveModal = () => setNothingToMoveModal(false);
+
   
   
   const moveInstructionUp = (index) => {    
-    if(currentRecipe.instructions[index].trim() !== ""){
+    if(currentRecipe.instructions[index].trim() === "" || 
+      currentRecipe.instructions[index -1].trim() === ""){
+
+      showNothingToMoveModal(index);     
+    } else {
       const toMoveUp = currentRecipe.instructions[index];
       const toMoveHere = currentRecipe.instructions[index -1];
       const newInstructions = [... currentRecipe.instructions];
   
       newInstructions[index-1] = toMoveUp;
       newInstructions[index] = toMoveHere;      
-      setCurrentRecipe({...currentRecipe, instructions: newInstructions});      
-    } else {
-      alert("There is no instruction here yet.")
+      setCurrentRecipe({...currentRecipe, instructions: newInstructions});     
     }
     
   }  
   
   const moveInstructionDown = (index) => {
-    if(currentRecipe.instructions[index].trim() !== ""){
+    if(currentRecipe.instructions[index].trim() !== "" || 
+    currentRecipe.instructions[index +1].trim() === ""){
+      showNothingToMoveModal(index);     
+    } else {
       const toMoveDown = currentRecipe.instructions[index];
       const toMoveHere = currentRecipe.instructions[index +1];
       const newInstructions = [... currentRecipe.instructions];
   
       newInstructions[index+1] = toMoveDown;
       newInstructions[index] = toMoveHere;  
-      setCurrentRecipe({...currentRecipe, instructions: newInstructions});      
-    } else {
-      alert("There is no instruction here yet.")
+      setCurrentRecipe({...currentRecipe, instructions: newInstructions}); 
     }
   }
 
@@ -173,17 +195,66 @@ const InstructionList = ({
           <Container className={`arrowContainer d-flex flex-column p-0 ${index === 0 ? 'justify-content-end' : ''}`}>
             {UpBtnVisible(index)}
             {DownBtnVisible(index)}
+
+            <Modal
+                  show={nothingToMoveModal}
+                  onHide={hideNothingToMoveModal}
+                  backdrop="static"
+                  keyboard={false}
+                  data-bs-theme={themeVariants['data-bs-theme']}       
+                  className={themeVariants.variant}
+                  centered
+                >
+                  <Modal.Header  closeButton >
+                    <Modal.Title >Unable to move Instruction</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body >
+                    Field Empty. Please add instruction before moving.
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button variant="primary" onClick={hideNothingToMoveModal}>
+                      OK
+                    </Button>
+                  </Modal.Footer>
+                </Modal>  
           </Container>
 
           <Container className="ingBtnContainer">          
             <Button   
               variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
-              className="ing-smaller-btn border-0"                   
-              onClick={(e) => removeInstruction(index)}
+              className="ing-smaller-btn border-0"                
+              onClick={(e) => showRemoveInstModal(index)}
               > 
-                {/* <i className="bi bi-x-octagon h6"></i> */}
                 <i className="bi bi-trash"></i>
               </Button>
+              <Modal
+                  show={removeInstModal}
+                  onHide={hideRemoveInstModal}
+                  backdrop="static"
+                  keyboard={false}
+                  data-bs-theme={themeVariants['data-bs-theme']}       
+                  className={themeVariants.variant}
+                  centered
+                >
+                  <Modal.Header  closeButton >
+                    <Modal.Title >Remove Instruction</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body >
+                    {typeof  currentRecipe.instructions[currentIndex] === "undefined" ? 
+                    `Are you sure you want to remove this instruction` 
+                      : currentRecipe.instructions[currentIndex].trim().length === 0 ? 
+                        `Are you sure you want to remove this instruction` :  
+                        `Are you sure you want to remove '${currentRecipe.instructions[currentIndex]}'?`}                   
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button variant="secondary" onClick={hideRemoveInstModal}>
+                      Close
+                    </Button>
+                    <Button variant="primary" onClick={(e) => removeInstruction()}>Yes</Button>
+                  </Modal.Footer>
+                </Modal>
+
+
           </Container> 
 
           </Container>
@@ -197,6 +268,30 @@ const InstructionList = ({
           className="smaller-btn"
           onClick={(e) => addInstruction()}
         >Add Instruction</Button>
+
+        <Modal
+          show={stopAddInstModal}
+          onHide={hideStopAddInstModal}
+          backdrop="static"
+          keyboard={false}
+          data-bs-theme={themeVariants['data-bs-theme']}       
+          className={themeVariants.variant}
+          centered
+        >
+          <Modal.Header  closeButton >
+            <Modal.Title >Unable to add Instruction</Modal.Title>
+          </Modal.Header>
+          <Modal.Body >
+            Please fill in the last instruction field before adding a new one
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={hideStopAddInstModal}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+
         
       </Row>
     </Form.Group>

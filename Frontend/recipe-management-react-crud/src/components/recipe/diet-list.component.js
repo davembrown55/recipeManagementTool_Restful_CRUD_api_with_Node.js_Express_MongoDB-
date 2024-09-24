@@ -1,5 +1,7 @@
-import React from "react";
+import React, {useState} from "react";
 import { Button, Form, ListGroup, Container, Row } from 'react-bootstrap';
+import Modal from 'react-bootstrap/Modal';
+
 
 const DietsList = ({
     currentRecipe,
@@ -8,6 +10,12 @@ const DietsList = ({
     themeVariants
 
 }) => {
+
+  const [removeDietModal, setRemoveDietModal] = useState(false);
+  const [nothingToMoveModal, setNothingToMoveModal] = useState(false);
+  const [stopAddDietModal, setStopAddDietModal] = useState(false); 
+  const [currentIndex, setcurrentIndex] = useState(null);
+
 
   const onChangeDiets = (index, e) => {
     const {value, selectedIndex, options} = e.target;
@@ -24,6 +32,8 @@ const DietsList = ({
 
     }
   }
+  const showStopAddDietModal = () =>  setStopAddDietModal(true);  
+  const hideStopAddDietModal = () => setStopAddDietModal(false);
 
   const addDiet = () => {    
     if((currentRecipe.diets.length > 0 && 
@@ -32,44 +42,60 @@ const DietsList = ({
         const newDiets = [... currentRecipe.diets, ""];
         setCurrentRecipe({ ...currentRecipe, diets: newDiets});        
       } else {
-        alert("Please fill in the last diet type before adding a new one.");
+        showStopAddDietModal();
       }
    }
+
+  const showRemoveDietModal = (index) => { 
+    setcurrentIndex(index);
+    setRemoveDietModal(true);
+  }
+  const hideRemoveDietModal = () => setRemoveDietModal(false);  
 
   const removeDiet = (index) => {
     if(currentRecipe.diets.length > 0) {
-      if(window.confirm("Are you sure you want to remove this diet type?")) {
-        const newDiets = currentRecipe.diets.filter((diet, i) => i !== index);  
-        setCurrentRecipe({ ...currentRecipe, diets: newDiets});
-      }
+      const newDiets = currentRecipe.diets.filter((diet, i) => i !== currentIndex);  
+      setCurrentRecipe({ ...currentRecipe, diets: newDiets});
+      hideRemoveDietModal();
+      setcurrentIndex(null);
     }
    }
 
+  const showNothingToMoveModal = () => { 
+    // setcurrentIndex(index);
+    setNothingToMoveModal(true);
+  }
+  const hideNothingToMoveModal = () => setNothingToMoveModal(false);
+
+
   const moveDietUp = (index) => {
-    if(currentRecipe.diets[index].trim() !== ""){
+    if(currentRecipe.diets[index].trim() === "" || 
+    currentRecipe.diets[index -1].trim() === ""){
+      showNothingToMoveModal(index);
+    } else {
       const toMoveUp = currentRecipe.diets[index];
       const toMoveHere = currentRecipe.diets[index -1];
       const newDiets = [... currentRecipe.diets];
   
       newDiets[index-1] = toMoveUp;
       newDiets[index] = toMoveHere;      
-      setCurrentRecipe({...currentRecipe, diets: newDiets});      
-    } else {
-      alert("There is no diet type here yet.")
+      setCurrentRecipe({...currentRecipe, diets: newDiets}); 
     }
    }
 
   const moveDietDown = (index) => {
-    if(currentRecipe.diets[index].trim() !== ""){
+    if(currentRecipe.diets[index].trim() === "" || 
+        currentRecipe.diets[index +1].trim() === ""){
+      showNothingToMoveModal(index);
+     
+    } else {
       const toMoveDown = currentRecipe.diets[index];
       const toMoveHere = currentRecipe.diets[index +1];
       const newDiets = [... currentRecipe.diets];
   
       newDiets[index+1] = toMoveDown;
       newDiets[index] = toMoveHere;  
-      setCurrentRecipe({...currentRecipe, diets: newDiets});      
-    } else {
-      alert("There is no diet type here yet.")
+      setCurrentRecipe({...currentRecipe, diets: newDiets}); 
     }
   }
 
@@ -136,7 +162,7 @@ const DietsList = ({
               // value={diet}
               onChange={(e) => onChangeDiets(index,  e)}  
               >
-          <option>Select Diet Type to change</option>
+          <option>Select Diet Type</option>
           <option value="Carnivore">Carnivore</option>
           <option value="DASH">DASH</option>
           <option value="Dairy Free">Dairy Free</option>
@@ -163,16 +189,67 @@ const DietsList = ({
           <Container className={`arrowContainer d-flex flex-column p-0 ${index === 0 ? 'justify-content-end' : ''}`}>
             {UpBtnVisible(index)}
             {DownBtnVisible(index)}
+
+            <Modal
+              show={nothingToMoveModal}
+              onHide={hideNothingToMoveModal}
+              backdrop="static"
+              keyboard={false}
+              data-bs-theme={themeVariants['data-bs-theme']}       
+              className={themeVariants.variant}
+              centered
+            >
+              <Modal.Header  closeButton >
+                <Modal.Title >Unable to move Diet Type</Modal.Title>
+              </Modal.Header>
+              <Modal.Body >
+                Field Empty. Please complete Diet Field before moving.
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="primary" onClick={hideNothingToMoveModal}>
+                  OK
+                </Button>
+              </Modal.Footer>
+            </Modal>            
+
           </Container>
 
           <Container className="ingBtnContainer">          
             <Button   
               variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
-              className="ing-smaller-btn border-0"                   
-              onClick={(e) => removeDiet(index)}
+              className="ing-smaller-btn border-0"  
+              onClick={(e) => showRemoveDietModal(index)}
               > 
                 <i className="bi bi-trash"></i>
               </Button>
+              <Modal
+                  show={removeDietModal}
+                  onHide={hideRemoveDietModal}
+                  backdrop="static"
+                  keyboard={false}
+                  data-bs-theme={themeVariants['data-bs-theme']}       
+                  className={themeVariants.variant}
+                  centered
+                >
+                  <Modal.Header  closeButton >
+                    <Modal.Title >Remove Diet Field</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body >
+                    {typeof  currentRecipe.diets[currentIndex] === "undefined" ? 
+                    `Are you sure you want to remove this diet type` 
+                      : currentRecipe.diets[currentIndex].trim().length === 0 ? 
+                        `Are you sure you want to remove this diet type?` :  
+                        `Are you sure you want to remove '${currentRecipe.diets[currentIndex]}'?`}                   
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button variant="secondary" onClick={hideRemoveDietModal}>
+                      Close
+                    </Button>
+                    <Button variant="primary" onClick={(e) => removeDiet()}>Yes</Button>
+                  </Modal.Footer>
+                </Modal>
+
+
           </Container> 
 
           </Container>
@@ -186,6 +263,29 @@ const DietsList = ({
           className="smaller-btn"
           onClick={(e) => addDiet()}
         >Add Diet type</Button>
+
+        <Modal
+          show={stopAddDietModal}
+          onHide={hideStopAddDietModal}
+          backdrop="static"
+          keyboard={false}
+          data-bs-theme={themeVariants['data-bs-theme']}       
+          className={themeVariants.variant}
+          centered
+        >
+          <Modal.Header  closeButton >
+            <Modal.Title >Unable to add Diet</Modal.Title>
+          </Modal.Header>
+          <Modal.Body >
+            Please complete the last Diet field before adding a new one
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={hideStopAddDietModal}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
         
       </Row>
     </Form.Group>

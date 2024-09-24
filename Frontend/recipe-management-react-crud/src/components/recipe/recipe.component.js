@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import RecipeDataService from "../../services/recipe.service";
 import { useParams, useNavigate } from 'react-router-dom';
-
+import Modal from 'react-bootstrap/Modal';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -30,6 +30,9 @@ const Recipe = () => {
     diets: [""]
 
   });
+
+  const [updateRecipeModal, setUpdateRecipeModal] = useState(false);
+  const [deleteRecipeModal, setDeleteRecipeModal] = useState(false);
 
   const [message, setMessage] = useState("");
 
@@ -97,7 +100,7 @@ const Recipe = () => {
 
     setErrors(validationErrors);
   };
-  
+
   const getRecipe = (id) => {
     RecipeDataService.get(id)
       .then((response) => {
@@ -132,26 +135,31 @@ const Recipe = () => {
       })
       .catch((e) => {
         console.log(e);
-      });
+      });      
   };
+
+  const showUpdateRecipeModal = () => setUpdateRecipeModal(true);  
+  const hideUpdateRecipeModal = () => setUpdateRecipeModal(false);
 
   const updateRecipe = () => {
     if (Object.keys(errors).length = 0) {return;} // Stop the function if validation fails
-   
-    if(window.confirm("Are you sure you want to update this recipe?")) {
-      RecipeDataService.update(currentRecipe.id, currentRecipe)
-        .then((response) => {
-          console.log(response.data);
-          setMessage("The Recipe was updated successfully!");
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    }
+ 
+    RecipeDataService.update(currentRecipe.id, currentRecipe)
+      .then((response) => {
+        console.log(response.data);
+        setMessage("The Recipe was updated successfully!");
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+      hideUpdateRecipeModal();
   }
 
+  const showDeleteRecipeModal = () => setDeleteRecipeModal(true);  
+  const hideDeleteRecipeModal = () => setDeleteRecipeModal(false);
+
   const deleteRecipe = () => {
-    if(window.confirm("Are you sure you want to delete this recipe?")) {
+    
       RecipeDataService.delete(currentRecipe.id)
         .then((response) => {
           console.log(response.data);
@@ -160,7 +168,7 @@ const Recipe = () => {
         .catch((e) => {
           console.log(e);
         });
-    }
+      hideDeleteRecipeModal();
   }
 
   const { themeVariants } = useTheme(); 
@@ -281,13 +289,6 @@ const Recipe = () => {
                     setCurrentRecipe={setCurrentRecipe}
                     instructions={currentRecipe.instructions}
                     setErrors={setErrors}
-
-                    // onChangeInstructions={onChangeInstructions}
-                    // addInstruction={addInstruction}
-                    // removeInstruction={removeInstruction}
-                    // moveInstructionUp={moveInstructionUp}
-                    // moveInstructionDown={moveInstructionDown}
-
                     themeVariants={themeVariants}
                     errors={errors}
                   />
@@ -336,15 +337,63 @@ const Recipe = () => {
                     )}
                     <Button
                     className="btn-danger"
-                    onClick={() => deleteRecipe()}
+                    onClick={() => showDeleteRecipeModal()}
                       >Delete
                     </Button>
+
+                    <Modal
+                    show={deleteRecipeModal}
+                    onHide={hideDeleteRecipeModal}
+                    backdrop="static"
+                    keyboard={false}
+                    data-bs-theme={themeVariants['data-bs-theme']}       
+                    className={themeVariants.variant}
+                    centered
+                  >
+                    <Modal.Header  closeButton >
+                      <Modal.Title >Delete Recipe</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body >
+                      Are you sure you want to delete: {currentRecipe.title}?
+                    </Modal.Body>
+                    <Modal.Footer>
+                      <Button variant="secondary" onClick={hideDeleteRecipeModal}>
+                        Close
+                      </Button>
+                      <Button variant="primary" onClick={(e) => deleteRecipe()}>Yes</Button>
+                    </Modal.Footer>
+                  </Modal>  
+
                     <Button
                     className="primary"
                     disabled={Object.keys(errors).length > 0} // disable update button if val failed and error object not empty
-                        onClick={() => updateRecipe()}
+                        onClick={() => showUpdateRecipeModal()}
                       >Update
-                    </Button>                  
+                    </Button>
+
+                    <Modal
+                    show={updateRecipeModal}
+                    onHide={hideUpdateRecipeModal}
+                    backdrop="static"
+                    keyboard={false}
+                    data-bs-theme={themeVariants['data-bs-theme']}       
+                    className={themeVariants.variant}
+                    centered
+                  >
+                    <Modal.Header  closeButton >
+                      <Modal.Title >Update Recipe</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body >
+                      Are you sure you want update: {currentRecipe.title}?
+                    </Modal.Body>
+                    <Modal.Footer>
+                      <Button variant="secondary" onClick={hideUpdateRecipeModal}>
+                        Close
+                      </Button>
+                      <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button>
+                    </Modal.Footer>
+                  </Modal>  
+
                 </Row>   
                 <Container className="updateMessages"> 
                   <Row className="mt-3 btnDisableTxt">{btnDisabledTxt()}</Row> 
