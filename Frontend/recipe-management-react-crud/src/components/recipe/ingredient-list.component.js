@@ -238,7 +238,7 @@ const IngredientList = ({
                   </Modal.Header>
                   <Modal.Body >
                     {typeof  currentRecipe.ingredients[currentIndex] === "undefined" ? 
-                    `Are you sure you want to remove this ingredient` 
+                    `Nothing here` 
                       : currentRecipe.ingredients[currentIndex].trim().length === 0 ? 
                         `Are you sure you want to remove this ingredient` :  
                         `Are you sure you want to remove '${currentRecipe.ingredients[currentIndex]}'?`}                   

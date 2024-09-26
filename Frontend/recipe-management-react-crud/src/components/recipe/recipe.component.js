@@ -28,12 +28,21 @@ const Recipe = () => {
     ingredients: [""],
     instructions: [""], 
     diets: [""]
-
   });
 
+  const [prevRecipeOnDB, setPrevRecipeOnDB] = useState({
+    id: null,
+    title: "",
+    description: "",
+    published: false,
+    cookingTimeMinutes: 0,
+    ingredients: [""],
+    instructions: [""], 
+    diets: [""]
+  });
+  const [noChangesToRecipe, setNoChangesToRecipe] = useState(false);
   const [updateRecipeModal, setUpdateRecipeModal] = useState(false);
   const [deleteRecipeModal, setDeleteRecipeModal] = useState(false);
-
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -111,7 +120,10 @@ const Recipe = () => {
         if (!Array.isArray(recipe.instructions)) {
           recipe.instructions = [""];
         }
-        setCurrentRecipe(recipe);
+
+        setCurrentRecipe({ ...recipe});
+        setPrevRecipeOnDB({ ...recipe});
+        console.log(`updated prevRecipeOnDB: ${JSON.stringify(prevRecipeOnDB)}`);
         console.log(response.data);
       })
       .catch((e) => {
@@ -130,6 +142,7 @@ const Recipe = () => {
     RecipeDataService.update(currentRecipe.id, data)
       .then((response) => {
         setCurrentRecipe({ ...currentRecipe, published: status });
+        setPrevRecipeOnDB({ ...currentRecipe, published: status });
         console.log(response.data);
         setMessage("The Recipe was updated successfully!")
       })
@@ -138,16 +151,39 @@ const Recipe = () => {
       });      
   };
 
-  const showUpdateRecipeModal = () => setUpdateRecipeModal(true);  
+  function isObjEqual(obj1, obj2) {
+    if (obj1 === obj2) return true;
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
+      return false;
+    }
+  
+    let keys1 = Object.keys(obj1);
+    let keys2 = Object.keys(obj2);
+  
+    if (keys1.length !== keys2.length) return false;
+  
+    for (let key of keys1) {
+      if (!keys2.includes(key) || !isObjEqual(obj1[key], obj2[key])) {
+        return false;
+      }
+    }  
+    return true;
+  }
+
+  const showUpdateRecipeModal = () => {
+    setNoChangesToRecipe(isObjEqual(currentRecipe, prevRecipeOnDB));
+    setUpdateRecipeModal(true); 
+  } 
   const hideUpdateRecipeModal = () => setUpdateRecipeModal(false);
 
   const updateRecipe = () => {
-    if (Object.keys(errors).length = 0) {return;} // Stop the function if validation fails
- 
+    if (Object.keys(errors).length !== 0) {return;} // Stop the function if validation fails    
+
     RecipeDataService.update(currentRecipe.id, currentRecipe)
       .then((response) => {
         console.log(response.data);
         setMessage("The Recipe was updated successfully!");
+        setPrevRecipeOnDB({... currentRecipe}); // update prevRecipeOnDB for next comparison
       })
       .catch((e) => {
         console.log(e);
@@ -384,13 +420,17 @@ const Recipe = () => {
                       <Modal.Title >Update Recipe</Modal.Title>
                     </Modal.Header>
                     <Modal.Body >
-                      Are you sure you want update: {currentRecipe.title}?
+                      {noChangesToRecipe ? `No changes to update!`:
+                       `Are you sure you want update: ${currentRecipe.title}?`}                      
                     </Modal.Body>
                     <Modal.Footer>
-                      <Button variant="secondary" onClick={hideUpdateRecipeModal}>
+                      <Button 
+                        variant={noChangesToRecipe ? "primary": "secondary"}
+                        onClick={hideUpdateRecipeModal}>
                         Close
                       </Button>
-                      <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button>
+                      {!noChangesToRecipe &&
+                      <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button>}
                     </Modal.Footer>
                   </Modal>  
 

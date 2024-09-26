@@ -236,7 +236,7 @@ const DietsList = ({
                   </Modal.Header>
                   <Modal.Body >
                     {typeof  currentRecipe.diets[currentIndex] === "undefined" ? 
-                    `Are you sure you want to remove this diet type` 
+                    `Nothing here` 
                       : currentRecipe.diets[currentIndex].trim().length === 0 ? 
                         `Are you sure you want to remove this diet type?` :  
                         `Are you sure you want to remove '${currentRecipe.diets[currentIndex]}'?`}                   
