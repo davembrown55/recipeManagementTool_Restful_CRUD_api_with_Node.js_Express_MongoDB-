@@ -133,6 +133,25 @@ p {
 .responsive-width-form{
   width:50%
 }
+.publishStatusWidth{
+  width:60%;
+}
+.publishStatusContainer {
+  display:flex;
+  justify-content: start;
+  padding-left:0.5rem;
+}
+.responsiveStatus {  
+    flex-direction: column;  
+    gap: 0.5rem;
+}
+.changeStatusContainer {
+  display:flex;
+  align-items: center;
+  justify-content:space-around;  
+  gap:1rem;
+  padding-left:0.25rem;
+}
 .dietSelectArea {
   min-width:80%;
   display:flex;
@@ -228,6 +247,17 @@ p {
   @media (min-width: 768px) {
     .responsive-width-form{
       width:25%;
+    }
+    .responsiveStatus {  
+      flex-direction: row;  
+      gap: 0
+    }
+    .publishStatusContainer {
+      justify-content: end;
+    }
+    .changeStatusContainer { 
+      padding-left:1rem;
+      justify-content:flex-start;
     }
     
     .smaller-btn {     

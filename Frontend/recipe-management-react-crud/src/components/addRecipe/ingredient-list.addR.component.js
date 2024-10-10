@@ -18,7 +18,7 @@ const IngredientList = ({
   const [stopAddIngModal, setStopAddIngModal] = useState(false); 
   const [currentIndex, setcurrentIndex] = useState(null);
 
-  const onChangeIngredients = (index, e) => {
+  const onChangeIngredients = (index, e) => {        
     const newIngredient = e.target.value;
      // Update the ingredients array
     const newIngredients = currentRecipe.ingredients.map((ingredient, i) => {
@@ -27,7 +27,7 @@ const IngredientList = ({
     setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients });
 
     // Destructure errors, excluding the specific ingredientError object and add to validationErrors    
-    const { ingredientsError = {}, ...validationErrors } = errors ;
+    const { ingredientsError = {}, initialIngredientsError, ...validationErrors } = errors ;
 
     // Create a copy of ingredientsError without any current index errors
     const { [`${index}`]: removedError, ...newIngredientsError } = ingredientsError || {};
@@ -68,18 +68,17 @@ const IngredientList = ({
         const newIngredients = currentRecipe.ingredients.filter((ingredient, i) => i !== currentIndex);  
         setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
 
-        //remove any error object associated with deleted field
+        //remove any errors associated with removed field
         const {ingredientsError = {}, ...validationErrors } = errors;
         const { [`${currentIndex}`]: removedError, ...newIngredientsError } = ingredientsError || {};  
         if (Object.keys(newIngredientsError).length > 0 ){
           validationErrors.ingredientsError = newIngredientsError;
-        }      
+        }        
         setErrors(validationErrors);  
 
         hideRemoveIngModal();
         setcurrentIndex(null);
-      }
-  }
+  }}
  
 
   const showStopAddIngModal = () => { 
@@ -92,19 +91,18 @@ const IngredientList = ({
     if((currentRecipe.ingredients.length > 0 && 
     currentRecipe.ingredients[currentRecipe.ingredients.length -1].trim() !== "") 
      || currentRecipe.ingredients.length === 0 ) {
-      const newIngredients = [ ...currentRecipe.ingredients, ""];
+      const newIngredients = [... currentRecipe.ingredients, ""];
       setCurrentRecipe({ ...currentRecipe, ingredients: newIngredients});
       //create error for new empty field
       const { ...validationErrors } = errors;
       validationErrors.ingredientsError = { [currentRecipe.ingredients.length]: 'Field Empty' };
-      setErrors(validationErrors);    
+      setErrors(validationErrors);
     } else {
       showStopAddIngModal();
     }
   }
 
   const showNothingToMoveModal = () => { 
-    // setcurrentIndex(index);
     setNothingToMoveModal(true);
   }
   const hideNothingToMoveModal = () => setNothingToMoveModal(false);
@@ -205,6 +203,7 @@ const IngredientList = ({
               data-bs-theme={themeVariants['data-bs-theme']}
               onChange={(e) => onChangeIngredients(index, e)}        
               isInvalid={ingredientIsVal(index)}
+              placeholder="Enter Ingredient"
             >
             </Form.Control>
             <Form.Control.Feedback type="invalid">
@@ -240,8 +239,8 @@ const IngredientList = ({
                 </Modal>
             </Container>
 
-            <Container className="ingBtnContainer">    
-              {delBtnVisible(index)} 
+            <Container className="ingBtnContainer">      
+              {delBtnVisible(index)}    
                 <Modal
                   show={removeIngModal}
                   onHide={hideRemoveIngModal}
@@ -256,7 +255,7 @@ const IngredientList = ({
                   </Modal.Header>
                   <Modal.Body >
                     {typeof  currentRecipe.ingredients[currentIndex] === "undefined" ? 
-                    `` 
+                    `Nothing here` 
                       : currentRecipe.ingredients[currentIndex].trim().length === 0 ? 
                         `Are you sure you want to remove this ingredient` :  
                         `Are you sure you want to remove '${currentRecipe.ingredients[currentIndex]}'?`}                   

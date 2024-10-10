@@ -29,7 +29,7 @@ const InstructionList = ({
     setCurrentRecipe({ ...currentRecipe, instructions: newInstructions });
     
     // Destructure errors, excluding the specific instructionError object and add to validationErrors    
-    const { instructionsError = {}, ...validationErrors } = errors ;
+    const { instructionsError = {}, initialInstructionsError, ...validationErrors } = errors;
   
     // Create a copy of instructionsError without any current index errors
     const { [`${index}`]: removedError, ...newInstructionsError } = instructionsError || {};
@@ -70,7 +70,7 @@ const InstructionList = ({
     if(currentRecipe.instructions.length > 0) {
       const newInstructions = currentRecipe.instructions.filter((instruction, i) => i !== currentIndex);  
       setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
-      
+        
       //remove any error object associated with deleted field
       const {instructionsError = {}, ...validationErrors } = errors;
       const { [`${currentIndex}`]: removedError, ...newInstructionsError } = instructionsError || {};  
@@ -90,9 +90,9 @@ const InstructionList = ({
   
   const addInstruction = () => {
     if(currentRecipe.instructions.length > 0 && 
-    currentRecipe.instructions[currentRecipe.instructions.length -1].trim() !== "" 
-    || currentRecipe.ingredients.length === 0 ) {
-      const newInstructions = [ ...currentRecipe.instructions, ""];
+    (currentRecipe.instructions[currentRecipe.instructions.length -1].trim() !== "" 
+    || currentRecipe.ingredients.length === 0 )) {
+      const newInstructions = [...currentRecipe.instructions, ""];            
       setCurrentRecipe({ ...currentRecipe, instructions: newInstructions});
       const { ...validationErrors } = errors;
       validationErrors.instructionsError = { [currentRecipe.instructions.length]: 'Field Empty' };
@@ -103,7 +103,6 @@ const InstructionList = ({
   }
 
   const showNothingToMoveModal = () => { 
-    // setcurrentIndex(index);
     setNothingToMoveModal(true);
   }
   const hideNothingToMoveModal = () => setNothingToMoveModal(false);
@@ -206,6 +205,7 @@ const InstructionList = ({
             data-bs-theme={themeVariants['data-bs-theme']}
             onChange={(e) => onChangeInstructions(index, e)}        
             isInvalid={instructionIsVal(index)}
+            placeholder="Enter Instruction"
           >
           </Form.Control>
           <Form.Control.Feedback type="invalid">
@@ -241,7 +241,7 @@ const InstructionList = ({
                 </Modal>  
           </Container>
 
-          <Container className="ingBtnContainer">          
+          <Container className="ingBtnContainer">   
             {delBtnVisible(index)}
               <Modal
                   show={removeInstModal}
@@ -305,10 +305,7 @@ const InstructionList = ({
               OK
             </Button>
           </Modal.Footer>
-        </Modal>
-
-
-        
+        </Modal>        
       </Row>
     </Form.Group>
 

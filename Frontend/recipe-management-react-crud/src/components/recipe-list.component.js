@@ -365,7 +365,8 @@ const RecipeList = () => {
               <Form.Check 
                 type="switch"
                 id="search-while-typing"
-                label={`Search while typing is: ${searchWhileTyping ? 'On' : 'Off'}`}
+                label={`Search while typing`}
+                // label={`Search while typing is: ${searchWhileTyping ? 'On' : 'Off'}`}
                 className='small-text py-2'
                 defaultChecked={searchWhileTyping}
                 onChange={handleSearchWhileTyping}
@@ -485,9 +486,11 @@ const RecipeList = () => {
                     variant={themeVariants.variant}  
                     data-bs-theme={themeVariants['data-bs-theme']}
                   >                    
-                        {currentRecipe.diets.length === 0 || typeof currentRecipe.diets === "undefined"  ? 
+                        {currentRecipe.diets.length === 0 
+                          || typeof currentRecipe.diets === "undefined"  
+                          || (currentRecipe.diets.length === 1 && currentRecipe.diets[0].trim() === "" ) ? 
                           <ListGroup.Item action  variant={themeVariants.variant} as="li"   
-                            >No diet type associated with this recipe
+                            >None
                           </ListGroup.Item> :
                           currentRecipe.diets.map((diet, index) => (    
                             <ListGroup.Item action  variant={themeVariants.variant} as="li"   

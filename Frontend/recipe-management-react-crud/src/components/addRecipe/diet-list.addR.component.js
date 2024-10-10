@@ -21,6 +21,7 @@ const DietsList = ({
     const {value, selectedIndex, options} = e.target;
       const newDiet = value;
     // Update the diet array
+
     if(options[selectedIndex].index !== 0) {
       const newDiets = currentRecipe.diets.map((diet, i) => {
         return i === index ? newDiet : diet;
@@ -73,7 +74,6 @@ const DietsList = ({
    }
 
   const showNothingToMoveModal = () => { 
-    // setcurrentIndex(index);
     setNothingToMoveModal(true);
   }
   const hideNothingToMoveModal = () => setNothingToMoveModal(false);
@@ -138,7 +138,6 @@ const DietsList = ({
     }
   }
 
-
   return (
       <Form.Group controlId="Diets" className="mb-4">
       <Form.Label className="ps-2">Diet Type</Form.Label>
@@ -148,9 +147,9 @@ const DietsList = ({
         data-bs-theme={themeVariants['data-bs-theme']}        
       >
       {diets.length === 0 || typeof diets === "undefined"  ? 
-          <ListGroup.Item action  variant={themeVariants.variant} as="li"   
-              >This recipe has no diet types yet. Click the 'add diet type' button to add one.
-          </ListGroup.Item> :
+      <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+          >This recipe has no diet types yet. Click the 'add diet type' button to add one.
+      </ListGroup.Item> :
       diets.map((diet, index) => (
         <ListGroup.Item 
           key={index}
@@ -164,13 +163,13 @@ const DietsList = ({
             data-bs-theme={themeVariants['data-bs-theme']}
             readOnly
             className="dietSelect"  
+            placeholder="Diet Type"
           >
           </Form.Control>
           <Form.Select 
               aria-label="Select Diet Type"
               id={`dietSelectIx${index}`}
               className="dietSelect"
-              // value={diet}
               onChange={(e) => onChangeDiets(index,  e)}  
               >
           <option>Select Diet Type</option>
@@ -222,10 +221,9 @@ const DietsList = ({
                 </Button>
               </Modal.Footer>
             </Modal>            
-
           </Container>
 
-          <Container className="ingBtnContainer">          
+          <Container className="ingBtnContainer">   
             {delBtnVisible(index)}
               <Modal
                   show={removeDietModal}
@@ -289,14 +287,9 @@ const DietsList = ({
               OK
             </Button>
           </Modal.Footer>
-        </Modal>
-
-        
+        </Modal>        
       </Row>
     </Form.Group>
-
-
   );
-
 };
 export default DietsList;

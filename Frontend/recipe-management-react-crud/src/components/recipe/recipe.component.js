@@ -16,8 +16,7 @@ import DietsList from "./diet-list.component";
 const Recipe = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [errors, setErrors] = useState({
-  });  
+  const [errors, setErrors] = useState({});  
 
   const [currentRecipe, setCurrentRecipe] = useState({
     id: null,
@@ -40,6 +39,35 @@ const Recipe = () => {
     instructions: [""], 
     diets: [""]
   });
+
+
+
+  useEffect(() => {       
+    const {recipeEmpty, noInstructions, noIngredients,  ...validationErrors} = errors;
+    if (currentRecipe.title.trim().length === 0 &&
+    currentRecipe.description.trim().length === 0 &&
+    (currentRecipe.cookingTimeMinutes === 0 || currentRecipe.cookingTimeMinutes === null) &&
+    (currentRecipe.ingredients.length === 0 || (currentRecipe.ingredients.length === 1 && currentRecipe.ingredients[0].trim() === "" )) &&
+    (currentRecipe.instructions.length ===  0 || (currentRecipe.instructions.length === 1 && currentRecipe.instructions[0].trim() === "")) 
+    ) {      
+      validationErrors.recipeEmpty = 'Recipe Empty';  
+    } else {
+      if(currentRecipe.instructions.length === 0 || 
+        (currentRecipe.instructions.length === 1 && currentRecipe.instructions[0].trim() === "")) {
+          validationErrors.noInstructions = 'No instructions. Please add some.';
+      }
+      if(currentRecipe.ingredients.length === 0 || 
+        (currentRecipe.ingredients.length === 1 && currentRecipe.ingredients[0].trim() === "")) {
+          validationErrors.noIngredients = 'No ingredients. Please add some.';
+      }
+    }
+
+    setErrors(validationErrors);  
+  }, [currentRecipe.title, currentRecipe.description, currentRecipe.cookingTimeMinutes, 
+    currentRecipe.ingredients, currentRecipe.instructions]);
+
+
+
   const [noChangesToRecipe, setNoChangesToRecipe] = useState(false);
   const [updateRecipeModal, setUpdateRecipeModal] = useState(false);
   const [deleteRecipeModal, setDeleteRecipeModal] = useState(false);
@@ -52,20 +80,30 @@ const Recipe = () => {
   useEffect(() => {
     if (message) {
       const submitMessage = document.getElementsByClassName("rcpMessageTxt");
-      submitMessage[0].style.visibility = "visible";
-      submitMessage[0].style.opacity = "1";
-      submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms"; 
 
-      const timerFadeOut = setTimeout(() => {
-        submitMessage[0].style.visibility = "hidden";
-        submitMessage[0].style.opacity = "0";
-        submitMessage[0].style.transition = "visibility 0s linear 300ms, opacity 1000ms";
-      }, 2500);      
+      if (submitMessage.length > 0) {
+        submitMessage[0].style.visibility = "visible";
+        submitMessage[0].style.opacity = "1";
+        submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms"; 
 
-      const timer = setTimeout(() => {
-        setMessage("");
-      }, 3000);
-      return () => clearTimeout(timer, timerFadeOut);
+        const timerFadeOut = setTimeout(() => {
+          if (submitMessage.length > 0) { 
+            submitMessage[0].style.visibility = "hidden";
+            submitMessage[0].style.opacity = "0";
+            submitMessage[0].style.transition = "visibility 0s linear 300ms, opacity 1000ms";
+          }
+        }, 2500);      
+
+        const timer = setTimeout(() => {
+          setMessage("");
+        }, 3000);
+
+        return () => {
+          clearTimeout(timer);
+          clearTimeout(timerFadeOut);
+
+        }
+      }
     }
   }, [message]);
 
@@ -94,8 +132,8 @@ const Recipe = () => {
 
 
   const onChangeCookingTimeMinutes = (e) => {
-    const cookingTimeMinutes = e.target.value;
-    setCurrentRecipe({ ...currentRecipe, cookingTimeMinutes });
+    const cookingTimeMinutes = parseInt(e.target.value, 10) || 0;
+    setCurrentRecipe({ ...currentRecipe, cookingTimeMinutes }); // Parse the input value to an integer
 
     // create a validationErrors obj from errors without any cookTimeError objects
     const {cookTimeError, ...validationErrors} = errors;    
@@ -103,10 +141,9 @@ const Recipe = () => {
     //validation
     if (isNaN(cookingTimeMinutes)) {      
       validationErrors.cookTimeError = 'Please enter a valid number.';
-    }  else if (cookingTimeMinutes.trim().length === 0 ){
-      validationErrors.cookTimeError = 'Field Empty';
+    }  else if (cookingTimeMinutes <= 0) {
+      validationErrors.cookTimeError = 'Field Empty or invalid cooking time.';
     } 
-
     setErrors(validationErrors);
   };
 
@@ -120,10 +157,8 @@ const Recipe = () => {
         if (!Array.isArray(recipe.instructions)) {
           recipe.instructions = [""];
         }
-
         setCurrentRecipe({ ...recipe});
         setPrevRecipeOnDB({ ...recipe});
-        console.log(`updated prevRecipeOnDB: ${JSON.stringify(prevRecipeOnDB)}`);
         console.log(response.data);
       })
       .catch((e) => {
@@ -176,14 +211,21 @@ const Recipe = () => {
   } 
   const hideUpdateRecipeModal = () => setUpdateRecipeModal(false);
 
+  const checkDietsForEmptyFields = () => {
+    const newDietArray = currentRecipe.diets.filter((diet, i) => diet.trim() !== "" );
+    const updatedRecipe = {...currentRecipe, diets:newDietArray};
+    return updatedRecipe;  
+  }
   const updateRecipe = () => {
     if (Object.keys(errors).length !== 0) {return;} // Stop the function if validation fails    
 
-    RecipeDataService.update(currentRecipe.id, currentRecipe)
+    const recipeData = checkDietsForEmptyFields();
+    RecipeDataService.update(currentRecipe.id, recipeData)
+    // RecipeDataService.update(currentRecipe.id, currentRecipe)
       .then((response) => {
         console.log(response.data);
         setMessage("The Recipe was updated successfully!");
-        setPrevRecipeOnDB({... currentRecipe}); // update prevRecipeOnDB for next comparison
+        setPrevRecipeOnDB({...currentRecipe}); // update prevRecipeOnDB for next comparison
       })
       .catch((e) => {
         console.log(e);
@@ -194,8 +236,7 @@ const Recipe = () => {
   const showDeleteRecipeModal = () => setDeleteRecipeModal(true);  
   const hideDeleteRecipeModal = () => setDeleteRecipeModal(false);
 
-  const deleteRecipe = () => {
-    
+  const deleteRecipe = () => {    
       RecipeDataService.delete(currentRecipe.id)
         .then((response) => {
           console.log(response.data);
@@ -213,34 +254,45 @@ const Recipe = () => {
     if (Object.keys(errors).length === 0){}
 
     if (Object.keys(errors).length > 0) {
-      let valFailMessage = {errMess: "Update Disabled. Please amend:"};
+      let valFailMessage = {errMess: `Unable to update '${currentRecipe.title}'.`};
 
       for (const [key, value] of Object.entries(errors)) {
-        switch (key) {
-          case 'titleError': 
-            valFailMessage.titleError = `Title: ${value}`
-            break;
-          case 'descriptionError': 
-            valFailMessage.descriptionError = `Decription: ${value}`
-            break;
-          case 'cookTimeError': 
-            valFailMessage.cookTimeError = `Cooking Time: ${value}`
-            break;
-          case 'ingredientsError': 
-            for (const [key, value] of Object.entries(errors.ingredientsError)) {
-              let ixInList = parseInt(key) + 1;
-              let newKey = `ingredient${key}Error`
-              valFailMessage[newKey] = `Ingredient (${(ixInList)}): ${value}`;
-            }
-            break;
-          case 'instructionsError': 
-            for (const [key, value] of Object.entries(errors.instructionsError)) {
-              let ixInList = parseInt(key) + 1;
-              let newKey = `instructions${key}Error`
-              valFailMessage[newKey] = `Instruction (${(ixInList)}): ${value}`;
-            }
-            break;
+        if (typeof errors.recipeEmpty === "undefined") {
+          switch (key) {
+            case 'titleError': 
+              valFailMessage.titleError = `Title: ${value}`
+              break;
+            case 'descriptionError': 
+              valFailMessage.descriptionError = `Decription: ${value}`
+              break;
+            case 'cookTimeError': 
+              valFailMessage.cookTimeError = `Cooking Time: ${value}`
+              break;
+            case 'ingredientsError': 
+              for (const [key, value] of Object.entries(errors.ingredientsError)) {
+                let ixInList = parseInt(key) + 1;
+                let newKey = `ingredient${key}Error`
+                valFailMessage[newKey] = `Ingredient (${(ixInList)}): ${value}`;
+              }
+              break;
+            case 'instructionsError': 
+              for (const [key, value] of Object.entries(errors.instructionsError)) {
+                let ixInList = parseInt(key) + 1;
+                let newKey = `instructions${key}Error`
+                valFailMessage[newKey] = `Instruction (${(ixInList)}): ${value}`;
+              }
+              break;
+            case 'noIngredients': 
+              valFailMessage.noIngredients = `${value}`
+              break;
+            case 'noInstructions': 
+              valFailMessage.noInstructions = `${value}`
+              break;            
+          } 
         }
+        else if (key === "recipeEmpty" ){
+          valFailMessage.recipeEmpty = `${value}. Nothing to add to database yet.`
+        }        
       }
       return  Object.keys(valFailMessage).map((item,index) => {
         return (<p key={index} >{valFailMessage[item]}</p>)
