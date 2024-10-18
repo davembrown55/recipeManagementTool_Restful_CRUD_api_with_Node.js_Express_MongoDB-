@@ -2,17 +2,9 @@ import React, { useState, useEffect } from "react";
 import RecipeDataService from "../../services/recipe.service";
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-bootstrap/Modal';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import Card from 'react-bootstrap/Card';
+import {Container, Row, Button, Form, InputGroup } from 'react-bootstrap';
 import Nav from 'react-bootstrap/Nav';
 import { useTheme} from '../../common/ThemeProvider';
-
-// import DoneIcon from '@mui/icons-material/Done';
 
 const ExistingUser = () => {
     
@@ -50,13 +42,16 @@ const ExistingUser = () => {
     const onChangeEmail = (e) => {
         const email = e.target.value;
         setCurrentUserDetails({ ...currentUserDetails, email });  
-
+        
         const {emailError,  ...validationErrors} = errors;  
+        let isValidEmail = /^("[^"]+"|[a-zA-Z0-9._%+-]+)@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
         if (email.trim().length === 0 ){
             validationErrors.emailError = 'Field Empty'; 
-        } else if (!e.target.checkValidity()) {
+        } else if (!isValidEmail.test(email)) {
             validationErrors.emailError = 'Invalid Email';
         }
+
         setErrors(validationErrors);   
     }
 
@@ -165,14 +160,14 @@ const ExistingUser = () => {
     return (
         <Container className="p-0">
             <Container as="h4" className="mb-4">
-                Login
+                Existing User Login
             </Container>
             <Form>
             <Container className="d-flex flex-column loginInputArea">
             <Form.Group controlId="emailInput" className="mb-4">
                   <Form.Label  className="ps-2">Email</Form.Label>
                     <Form.Control
-                      type="email"
+                      type="text"
                       placeholder="Email"
                       value={currentUserDetails.email} 
                       data-bs-theme={themeVariants['data-bs-theme']}

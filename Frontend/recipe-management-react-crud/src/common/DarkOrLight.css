@@ -120,19 +120,10 @@ background-color: rgba(210, 232, 223, 1);
     border-left-color: rgba(0, 0, 0, 0.175);
     border-right-color: rgba(0, 0, 0, 0.175);
 }
-/* .light .passwordValid {
-    font-size: .875em;
-    color: #198754;
-}
-.dark .passwordValid {
-    font-size: .875em;
-    color: #198754;
-} */
+
 .light .passwordInvalid {
-    /* font-size: .875em; */
     color: #dc3545;
 }
 .dark .passwordInvalid {
-    /* font-size: .875em; */
     color: #ea868f;
 }
