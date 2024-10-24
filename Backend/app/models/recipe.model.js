@@ -27,26 +27,4 @@ module.exports = (mongoose, mongoosePaginate) => {
     return Recipe;
 };
 
-// module.exports = (mongoose, mongoosePaginate) => {
-    
-//     const Recipe = mongoose.model(
-//         "recipe",
-//         mongoose.Schema(    
-//             {
-//                 title: String,
-//                 description: String,
-//                 ingredients: Array,
-//                 instructions: Array,
-//                 cookingTimeMinutes: Number,
-//                 published: Boolean
-
-//             },
-//             {timestamps: true}
-            
-//         )
-//     );
-//     // Recipe.plugin(mongoosePaginate);
-//     return Recipe;
-    
-// };
 

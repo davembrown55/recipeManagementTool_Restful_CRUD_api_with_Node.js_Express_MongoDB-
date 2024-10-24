@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
-import RecipeDataService from "../../services/recipe.service";
+// import RecipeDataService from "../../services/old.recipe.service";
+import useUserService from "../../services/user.service";
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-bootstrap/Modal';
 import {Container, Row, Button, Form, InputGroup } from 'react-bootstrap';
-// import Container from 'react-bootstrap/Container';
-// import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-// import Button from 'react-bootstrap/Button';
-// import Form from 'react-bootstrap/Form';
-// import InputGroup from 'react-bootstrap/InputGroup';
-import Card from 'react-bootstrap/Card';
 import { useTheme} from '../../common/ThemeProvider';
 
+import http from '../../http-common';  
+import axios from 'axios';
+
 const UserRegister = () => {
+
+    const { register, check } = useUserService();
 
     const { themeVariants } = useTheme(); 
     const [currentUserDetails, setCurrentUserDetails] = useState({
@@ -21,11 +20,16 @@ const UserRegister = () => {
         password: ""
     });
 
+    const [passwordMatch, setPasswordMatch] = useState("");
+    const [submittedRegistration, setSubmittedRegistration] = useState(false);
+    const [registrationError, setRegistrationError] = useState(false);
+    const [regErrMessage, setRegErrMessage] = useState("");
     const [errors, setErrors] = useState({});
     const [displayInitialPasswordMessage, setDisplayInitialPasswordMessage] = useState(true);
     const [hidePassword, setHidePassword] = useState(true); 
     const [passwordFocus, setPasswordFocus] = useState(false);
-
+    const [usernameAvailable, setUsernameAvailable] = useState(null);
+    const [emailAvailable, setEmailAvailable] = useState(null);
 
     useEffect(() => {
         const passwordInput = document.getElementById("passwordInput");
@@ -43,6 +47,61 @@ const UserRegister = () => {
           };
         }
       }, []);
+
+    // useEffect for Username Debouncing
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            const checkAvailability = async () => {
+                const input = currentUserDetails.username.trim();
+                const params = {username: input};
+
+                if (input.length === 0) {
+                    setUsernameAvailable(null);
+                    return;
+                }
+                try {
+                    const response = await check (params);
+                    // console.log(response.data.userNameAvailable);
+                    setUsernameAvailable(response.userNameAvailable);
+                } catch (error) {
+                    console.error("Error checking username:", error);
+                    setUsernameAvailable(false);
+                }
+            };
+            checkAvailability();
+        }, 500); 
+
+        // Cleanup timeout if username changes before 500ms
+        return () => clearTimeout(handler);
+    }, [currentUserDetails.username]);
+
+    // useEffect for Email Debouncing
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            const checkAvailability = async () => {
+                const input = currentUserDetails.email.trim();
+                const params = {
+                    email: input                    
+                };
+                if (input.length === 0) {
+                    setEmailAvailable(null);
+                    return;
+                }
+                try {
+                    const response = await check(params);                          
+                    // console.log(response.data.emailAvailable);
+                    setEmailAvailable(response.emailAvailable);
+                } catch (err) {
+                    console.error("Error checking email:", err);  
+                    setEmailAvailable(false);
+                }
+            };
+            checkAvailability();
+        }, 500); 
+        // Cleanup timeout if email changes before 500ms
+        return () => clearTimeout(handler);    
+    }, [currentUserDetails.email]);
+
       
     const onChangeUsername = (e) => {
         const username = e.target.value;
@@ -103,6 +162,19 @@ const UserRegister = () => {
         setErrors(validationErrors);  
     }
 
+    const onChangePasswordMatch = (e) => {
+        const passwordMatch = e.target.value;
+        setPasswordMatch(passwordMatch);
+
+        const {passwordMatchError,  ...validationErrors} = errors;  
+
+        if (passwordMatch !== currentUserDetails.password) {
+            validationErrors.passwordMatchError = "Doesn't match password";
+        }
+        setErrors(validationErrors);
+        
+    }
+
     const passwordFeedbackMsg = () => {
         if(passwordFocus && typeof errors.passwordError ==="undefined" 
             && displayInitialPasswordMessage && currentUserDetails.password.length === 0) {
@@ -154,15 +226,70 @@ const UserRegister = () => {
             }                  
     }
 
+    // const registerUser = async (userDetails) => {
+    //     try {
+    //         const response = await axios.post('/api/auth/register', userDetails);  // Adjust API endpoint
+    //         localStorage.setItem('token', response.data.token);  // Store token on successful registration
+    //         console.log('User registered successfully');
+    //     } catch (error) {
+    //         console.error('Error during registration:', error);
+    //     }
+    // };
+
+    const navigate = useNavigate();
+
+    const handleRegister = async () => {
+        try {
+            const data = {
+                username: currentUserDetails.username, 
+                email: currentUserDetails.email, 
+                password: currentUserDetails.password
+            }
+            const response = await register(data);
+
+        // Optionally store token if returned
+        localStorage.setItem('token', response.data.token); 
+        setSubmittedRegistration(true);
+        } catch (e) {
+        console.error('Registration failed:', e);
+        console.log(` error message: ${e.response.data.msg}`);
+        setRegErrMessage(e.response.data.msg);
+        setRegistrationError(true);
+        setSubmittedRegistration(true);
+
+        }
+    };
+
+
+
+    const hideSubmitRegisterModal = () => {
+        if(registrationError) {
+            setSubmittedRegistration(false);
+            setRegistrationError(false);
+            setRegErrMessage("");
+        } else {
+            setSubmittedRegistration(false);
+            navigate('/login');
+        }
+    }
+
     const submitLogin = () => {
-        console.log(`Current user details: ${JSON.stringify(currentUserDetails)}`)
+        // console.log(`Current user details: ${JSON.stringify(currentUserDetails)}`)
+        handleRegister();
     }
     const toggleHidePassword = () => {
         hidePassword ? setHidePassword(false) :  setHidePassword(true) ;
         const passwordInput = document.getElementById("passwordInput");
+        const passwordMatchInput = document.getElementById("passwordMatch");
+
         if(passwordInput.type === "password") {
             passwordInput.type = "text";
-        } else {passwordInput.type = "password";}
+            passwordMatchInput.type = "text";
+            
+        } else {
+            passwordInput.type = "password";
+            passwordMatchInput.type = "password";
+        }
     }
     const HidePasswordIcon = () => {
         return hidePassword ? (            
@@ -188,13 +315,16 @@ const UserRegister = () => {
                   value={currentUserDetails.username} 
                   data-bs-theme={themeVariants['data-bs-theme']}
                   onChange={onChangeUsername}
-                  isInvalid={!!errors.usernameError } 
-                  isValid={!!!errors.usernameError && currentUserDetails.username.length > 0}
+                  isInvalid={!!errors.usernameError || usernameAvailable === false } 
+                  isValid={usernameAvailable === true && !!!errors.usernameError && currentUserDetails.username.length > 0}
                 
                 >
                 </Form.Control>
-                <Form.Control.Feedback className="" type="invalid">
-                  {errors.usernameError}
+                <Form.Control.Feedback type="invalid">
+                  {errors.usernameError || "Username is already taken."}
+                </Form.Control.Feedback>
+                <Form.Control.Feedback type="valid">
+                    Username is available!
                 </Form.Control.Feedback>
         </Form.Group>
 
@@ -206,13 +336,16 @@ const UserRegister = () => {
                   value={currentUserDetails.email} 
                   data-bs-theme={themeVariants['data-bs-theme']}
                   onChange={onChangeEmail}
-                  isInvalid={!!errors.emailError } 
-                  isValid={!!!errors.emailError && currentUserDetails.email.length > 0}
+                  isInvalid={!!errors.emailError || emailAvailable === false} 
+                  isValid={emailAvailable === true && !!!errors.emailError && currentUserDetails.email.length > 0}
                 
                 >
                 </Form.Control>
                 <Form.Control.Feedback className="" type="invalid">
-                  {errors.emailError}
+                  {errors.emailError || "Email is already in use."}
+                </Form.Control.Feedback>
+                <Form.Control.Feedback type="valid">
+                    Email is available!
                 </Form.Control.Feedback>
         </Form.Group>
 
@@ -244,15 +377,70 @@ const UserRegister = () => {
                 {passwordFocus && (passwordFeedbackMsg())}
             </Container>
             </Form.Group>
+
+            <Form.Group controlId="passwordMatch" className="mb-4">
+              <Form.Label className="ps-2">Retype Password</Form.Label>   
+                <Form.Control
+                  type="password"
+                  placeholder="Retype Password"
+                  value={currentUserDetails.passwordMatch} 
+                  data-bs-theme={themeVariants['data-bs-theme']}
+                  onChange={onChangePasswordMatch}
+                  isInvalid={!!errors.passwordMatchError } 
+                  isValid={!!!errors.passwordMatchError && passwordMatch.length > 0} 
+                >
+                </Form.Control>
+            
+                <Form.Control.Feedback className="" type="invalid">
+                    {errors.passwordMatchError}
+                </Form.Control.Feedback>                          
+                <Form.Control.Feedback className="" type="valid"> 
+                    Its a match
+                </Form.Control.Feedback>  
+
+            </Form.Group>
         </Container>
             <Row xs="auto" className="justify-content-center gap-3">
                    <Button 
                     onClick={submitLogin} 
-                    disabled={Object.keys(errors).length > 0}
+                    disabled={
+                        Object.keys(errors).length > 0
+                        || (currentUserDetails.username.trim().length === 0 || 
+                            currentUserDetails.password.trim().length === 0 || 
+                            currentUserDetails.email.trim().length === 0)
+                    }
                     className="btn btn-primary">
                      Submit
                    </Button>
             </Row>   
+ 
+            <Modal
+                show={submittedRegistration}
+                onHide={hideSubmitRegisterModal}
+                backdrop="static"
+                keyboard={false}
+                data-bs-theme={themeVariants['data-bs-theme']}       
+                className={themeVariants.variant}
+                centered
+                >
+                <Modal.Header  closeButton >
+                    {registrationError ? 
+                        <Modal.Title >Registration Error</Modal.Title>
+                        : <Modal.Title >Registration Complete: {currentUserDetails.username}!</Modal.Title>
+                    }
+
+                </Modal.Header>
+                <Modal.Body >
+                {registrationError ? 
+                    `Error message: ${regErrMessage}` 
+                   : "Click OK to head to the login screen."
+                }
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" onClick={(e) => hideSubmitRegisterModal()}>OK</Button>
+                </Modal.Footer>
+            </Modal>  
+        
             
         </Form>
         

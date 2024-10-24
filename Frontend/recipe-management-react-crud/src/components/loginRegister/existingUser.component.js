@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import RecipeDataService from "../../services/recipe.service";
+import useUserService from "../../services/user.service";
 import { useParams, useNavigate } from 'react-router-dom';
 import Modal from 'react-bootstrap/Modal';
 import {Container, Row, Button, Form, InputGroup } from 'react-bootstrap';
 import Nav from 'react-bootstrap/Nav';
 import { useTheme} from '../../common/ThemeProvider';
+import axios from 'axios';
 
 const ExistingUser = () => {
     
@@ -13,6 +14,9 @@ const ExistingUser = () => {
         email: "",
         password: ""
     });
+    const { login, check } = useUserService();
+    const [loginFailed, setLoginFailed] = useState(false);
+    const [loginMsgTxt, setLoginMsgTxt] = useState({});
 
     const [errors, setErrors] = useState({})
     const [displayInitialPasswordMessage, setDisplayInitialPasswordMessage] = useState(true);
@@ -139,9 +143,36 @@ const ExistingUser = () => {
             }                  
     }
 
+    const handleLogin = async () => {
+        const tempLoginMsg = {};
+        try {
+          const response = await login(currentUserDetails);        
+          localStorage.setItem('token', response.data.token); // Store JWT token
+
+          console.log('Login successful, token stored in localStorage.', response);
+          setLoginFailed(false);
+          tempLoginMsg.success = "Login successful.";
+          setLoginMsgTxt(tempLoginMsg);
+
+          let resetUser = { email: "", password: "" };
+          setCurrentUserDetails(resetUser);
+       
+        } catch (error) {
+          console.error('Login failed:', error);
+
+          tempLoginMsg.error = error.response.data.msg;
+          setLoginMsgTxt(tempLoginMsg);
+          setLoginFailed(true);
+          let password = "";
+          setCurrentUserDetails({...currentUserDetails, password});
+
+        }
+    };
+
     const submitLogin = () => {
-        console.log(`Current user details: ${JSON.stringify(currentUserDetails)}`)
+        handleLogin();
     }
+
     const toggleHidePassword = () => {
         hidePassword ? setHidePassword(false) :  setHidePassword(true) ;
         const passwordInput = document.getElementById("passwordInput");
@@ -155,6 +186,26 @@ const ExistingUser = () => {
         ) : (
             <i className="bi bi-eye"></i>
         ) 
+    }
+
+    const loginErrorMsg = () => {
+        if (Object.keys(loginMsgTxt).length > 0) {
+
+            if (loginMsgTxt.hasOwnProperty('success')) {
+                return  Object.keys(loginMsgTxt).map((item,index) => {
+                    return (<p key={index} className="loginValid">{loginMsgTxt[item] }</p>)
+                })
+            }
+            if (loginMsgTxt.hasOwnProperty('error')) { 
+                return  Object.keys(loginMsgTxt).map((item,index) => {
+                    return (<p key={index} className="loginInvalid">Login failed:   {loginMsgTxt[item] }</p>)
+                })
+            }
+            // return loginMsgTxt;
+            
+            
+        }
+
     }
 
     return (
@@ -214,11 +265,17 @@ const ExistingUser = () => {
                 <Row xs="auto" className="justify-content-center gap-3">
                        <Button 
                         onClick={submitLogin} 
-                        disabled={Object.keys(errors).length > 0}
+                        disabled={Object.keys(errors).length > 0 || 
+                            (currentUserDetails.email.trim().length === 0 || 
+                              currentUserDetails.password.trim().length === 0)
+                        }
                         className="btn btn-primary">
                          Submit
                        </Button>
                 </Row>   
+                <Container className="updateMessages"> 
+                  <Row className="mt-3 btnDisableTxt">{loginErrorMsg()}</Row> 
+                </Container> 
                 
             </Form>
             

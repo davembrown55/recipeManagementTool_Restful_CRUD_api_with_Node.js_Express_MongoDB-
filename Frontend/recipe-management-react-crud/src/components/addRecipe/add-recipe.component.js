@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import RecipeDataService from "../../services/recipe.service";
+// import RecipeDataService from "../../services/old.recipe.service";
+import useRecipeService from "../../services/recipe.service";
 import {useNavigate} from 'react-router-dom';
 
 import Modal from 'react-bootstrap/Modal';
@@ -27,6 +28,7 @@ const [currentRecipe, setCurrentRecipe] = useState({
     diets: [""]
 });
 
+const {create} = useRecipeService();
 
 const [published, setPublished] = useState(false);
 const [submitted, setSubmitted] = useState(false);
@@ -141,21 +143,35 @@ const checkDietsForEmptyFields = () => {
 }
 
 // Save recipe to the database
-const saveRecipe = () => {
+const saveRecipe = async () => {
+  
+  try{
     // dont include diets if empty
     const data = checkDietsForEmptyFields();
-    // const data = currentRecipe;
+    const response = await create(data);
+    setSubmitted(true);
+    resetRecipe();
+    console.log(response);
+  } catch (e) {
+    console.error(e);
+  }
 
-    RecipeDataService.create(data)
-        .then((response) => {
-        setSubmitted(true);
-        resetRecipe();
-        console.log(response.data);
-        })
-        .catch((e) => {
-        console.log(e);
-        });
-};
+}
+// const saveRecipe = () => {
+//     // dont include diets if empty
+//     const data = checkDietsForEmptyFields();
+//     // const data = currentRecipe;
+
+//     RecipeDataService.create(data)
+//         .then((response) => {
+//         setSubmitted(true);
+//         resetRecipe();
+//         console.log(response.data);
+//         })
+//         .catch((e) => {
+//         console.log(e);
+//         });
+// };
 
 const { themeVariants } = useTheme(); 
 

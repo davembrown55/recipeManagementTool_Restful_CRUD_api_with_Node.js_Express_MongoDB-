@@ -1,8 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-
 const app = express();
+require('dotenv').config();
 
 var corsOptions =  {
     origin: "http://localhost:8081"
@@ -23,6 +23,8 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/recipe.routes")(app);
+ 
+app.use('/api/auth', require("./app/routes/auth.routes"));
 
 //Set port, listen for requests
 const PORT = process.env.PORT || 8080; 

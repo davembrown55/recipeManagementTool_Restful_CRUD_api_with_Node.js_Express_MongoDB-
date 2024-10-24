@@ -1,42 +1,58 @@
-import http from "../http-common";
+import { useCallback } from 'react';
+import http from '../http-common';
 
-class RecipeDataService {
-  getAll(params) {
-    return http.get("/recipes", {params});
-  }
+const useRecipeService = () => {
+  const getAll = useCallback(async (params) => {
+    try {
+      const response = await http.get('/recipes', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+      throw error;
+    }
+  }, []);
 
-  get(id) {
-    return http.get(`/recipes/${id}`);
-  }
+  const get = useCallback(async (id) => {
+    try {
+      const response = await http.get(`/recipes/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching recipe with id ${id}:`, error);
+      throw error;
+    }
+  }, []);
 
-  create(data) {
-    return http.post("/recipes", data);
-  }
+  const create = useCallback(async (data) => {
+    try {
+      const response = await http.post('/recipes', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating recipe:', error);
+      throw error;
+    }
+  }, []);
 
-  update(id, data) {
-    return http.put(`/recipes/${id}`, data);
-  }
+  const update = useCallback(async (id, data) => {
+    try {
+      const response = await http.put(`/recipes/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating recipe with id ${id}:`, error);
+      throw error;
+    }
+  }, []);
 
-  delete(id) {
-    return http.delete(`/recipes/${id}`);
-  }
+  const remove = useCallback(async (id) => {
+    try {
+      const response = await http.delete(`/recipes/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting recipe with id ${id}:`, error);
+      throw error;
+    }
+  }, []);
 
-  deleteAll() {
-    return http.delete(`/recipes`);
-  }
+  return { getAll, get, create, update, remove };
+};
 
-  findByTitle(title) {
-    return http.get(`/recipes?title=${title}`);
-  }
-
-  findByIngredient(ingredients) {
-    return http.get(`/recipes?ingredients=${ingredients}`);
-  }
-
-  findByMaxCookingTime(maxCookingTime) {
-    return http.get(`/recipes?maxCookingTime=${maxCookingTime}`);
-  }
-
-}
-
-export default new RecipeDataService();
+export default useRecipeService;

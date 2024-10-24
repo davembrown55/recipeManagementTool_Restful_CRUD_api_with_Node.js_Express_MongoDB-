@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from "react";
-import RecipeDataService from "../../services/recipe.service";
+import React, { useState, useEffect, useCallback } from "react";
+import useRecipeService from "../../services/recipe.service";
 import { useParams, useNavigate } from 'react-router-dom';
-import Modal from 'react-bootstrap/Modal';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Card from 'react-bootstrap/Card';
+import { Modal, Container, Row, Col, Button, Form, Card } from 'react-bootstrap';
 import { useTheme} from '../../common/ThemeProvider';
 import IngredientList from "./ingredient-list.component";
 import InstructionList from "./instruction-list.component";
@@ -17,6 +11,8 @@ const Recipe = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});  
+
+  const { get, update, remove } = useRecipeService();
 
   const [currentRecipe, setCurrentRecipe] = useState({
     id: null,
@@ -73,8 +69,28 @@ const Recipe = () => {
   const [deleteRecipeModal, setDeleteRecipeModal] = useState(false);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
+  useEffect(() => {   
+    const getRecipe = async (idParam) => {
+      try {
+        const data = await get(idParam);
+        const {...recipe} = data;
+        
+        if (!Array.isArray(recipe.ingredients)) {
+          recipe.ingredients = [""];
+        }
+        if (!Array.isArray(recipe.instructions)) {
+          recipe.instructions = [""];
+        }
+        setCurrentRecipe({ ...recipe});
+        setPrevRecipeOnDB({...recipe});  
+  
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
     getRecipe(id);
+
   }, [id]);
 
   useEffect(() => {
@@ -147,45 +163,27 @@ const Recipe = () => {
     setErrors(validationErrors);
   };
 
-  const getRecipe = (id) => {
-    RecipeDataService.get(id)
-      .then((response) => {
-        const recipe = response.data;
-        if (!Array.isArray(recipe.ingredients)) {
-          recipe.ingredients = [""];
-        }
-        if (!Array.isArray(recipe.instructions)) {
-          recipe.instructions = [""];
-        }
-        setCurrentRecipe({ ...recipe});
-        setPrevRecipeOnDB({ ...recipe});
-        console.log(response.data);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+
+  const updatePublished = async (status) => {
+    try {
+      const data = {
+        id: currentRecipe.id,
+        published: status
+      };
+      
+     const response = await update(currentRecipe.id, data);
+
+     setCurrentRecipe({ ...currentRecipe, published: status });
+     setPrevRecipeOnDB({ ...currentRecipe, published: status });
+     console.log(response);
+     setMessage("The Recipe was updated successfully!")
+
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const updatePublished = (status) => {
-    const data = {
-      id: currentRecipe.id,
-      title: currentRecipe.title,
-      description: currentRecipe.description,
-      published: status,
-    };
-
-    RecipeDataService.update(currentRecipe.id, data)
-      .then((response) => {
-        setCurrentRecipe({ ...currentRecipe, published: status });
-        setPrevRecipeOnDB({ ...currentRecipe, published: status });
-        console.log(response.data);
-        setMessage("The Recipe was updated successfully!")
-      })
-      .catch((e) => {
-        console.log(e);
-      });      
-  };
-
+  
   function isObjEqual(obj1, obj2) {
     if (obj1 === obj2) return true;
     if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
@@ -216,37 +214,35 @@ const Recipe = () => {
     const updatedRecipe = {...currentRecipe, diets:newDietArray};
     return updatedRecipe;  
   }
-  const updateRecipe = () => {
-    if (Object.keys(errors).length !== 0) {return;} // Stop the function if validation fails    
+  const updateRecipe = async () => {
+    if(Object.keys(errors).length !== 0) {return;} // Stop the function if validation fails    
+    try{
+      const recipeData = checkDietsForEmptyFields();
 
-    const recipeData = checkDietsForEmptyFields();
-    RecipeDataService.update(currentRecipe.id, recipeData)
-    // RecipeDataService.update(currentRecipe.id, currentRecipe)
-      .then((response) => {
-        console.log(response.data);
-        setMessage("The Recipe was updated successfully!");
-        setPrevRecipeOnDB({...currentRecipe}); // update prevRecipeOnDB for next comparison
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-      hideUpdateRecipeModal();
+      const response = await update(currentRecipe.id, recipeData);
+      console.log(response);
+      setMessage("The Recipe was updated successfully!");
+      setPrevRecipeOnDB({...currentRecipe}); // update prevRecipeOnDB for next comparison    
+
+    } catch (e) {
+      console.error(e);
+    }
+    hideUpdateRecipeModal();
+  }
+
+  const deleteRecipe = async() => {    
+    try {
+      const response = await remove(currentRecipe.id);
+      console.log(response);
+      navigate('/Recipes');
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const showDeleteRecipeModal = () => setDeleteRecipeModal(true);  
   const hideDeleteRecipeModal = () => setDeleteRecipeModal(false);
 
-  const deleteRecipe = () => {    
-      RecipeDataService.delete(currentRecipe.id)
-        .then((response) => {
-          console.log(response.data);
-          navigate('/Recipes');
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-      hideDeleteRecipeModal();
-  }
 
   const { themeVariants } = useTheme(); 
 
@@ -303,7 +299,7 @@ const Recipe = () => {
 
 
   return (
-    // <Container> {/* temporary container */}
+    
     <Container fluid className="d-flex justify-content-center">
       <Col xs={12} sm={12} md={10} lg={8} className="d-flex justify-content-center">
 
@@ -395,10 +391,8 @@ const Recipe = () => {
                       type="text"
                       value={currentRecipe.published ? "Published" : "Pending"} 
                       data-bs-theme={themeVariants['data-bs-theme']}
-                      className="responsive-width-form"                      
-                      // disabled  
+                      className="responsive-width-form"                    
                       readOnly                    
-                      // isInvalid={!!} 
                     >
                     </Form.Control>
                 </Form.Group>
@@ -411,14 +405,14 @@ const Recipe = () => {
                       <Button
                         onClick={() => updatePublished(false)}
                         className="btn-warning"
-                        disabled={Object.keys(errors).length > 0} // disable update button if val failed and error object not empty
+                        disabled={Object.keys(errors).length > 0} 
                       >Make Private 
                       </Button>
                       ) : (
                       <Button
                         className="btn-success"
                         onClick={() => updatePublished(true)}
-                        disabled={Object.keys(errors).length > 0} // disable update button if val failed and error object not empty
+                        disabled={Object.keys(errors).length > 0} 
                       >Publish 
                       </Button>
 
@@ -458,7 +452,7 @@ const Recipe = () => {
                         onClick={() => showUpdateRecipeModal()}
                       >Update
                     </Button>
-
+              
                     <Modal
                     show={updateRecipeModal}
                     onHide={hideUpdateRecipeModal}
@@ -501,7 +495,7 @@ const Recipe = () => {
         )}  
      </Col>
     </Container>        
-  // </Container>
+  
   );
 };
 

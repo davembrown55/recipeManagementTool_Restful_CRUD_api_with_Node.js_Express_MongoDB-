@@ -231,11 +231,9 @@ p {
   font-size: .875em;
   color: #198754;
 }
-/* .passwordValid:before {
-  position: relative;
-  left: -35px;
-  content: "✔";
-} */
+.loginValid {
+  color: #198754;
+}
 
 
 .passwordInvalid {

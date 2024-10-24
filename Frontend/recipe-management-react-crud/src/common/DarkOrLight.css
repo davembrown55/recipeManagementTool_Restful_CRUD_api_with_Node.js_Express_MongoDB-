@@ -127,3 +127,9 @@ background-color: rgba(210, 232, 223, 1);
 .dark .passwordInvalid {
     color: #ea868f;
 }
+.light .loginInvalid {
+    color: #dc3545;
+}
+.dark .loginInvalid {
+    color: #ea868f;
+}

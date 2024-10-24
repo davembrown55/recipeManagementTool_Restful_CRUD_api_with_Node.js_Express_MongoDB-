@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
 import RecipeDataService from "../../services/recipe.service";
 import { useParams, useNavigate, useLocation} from 'react-router-dom';
-import Modal from 'react-bootstrap/Modal';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Card from 'react-bootstrap/Card';
-import Nav from 'react-bootstrap/Nav';
+import { Container, Col, Card, Nav   } from 'react-bootstrap';
 import { useTheme} from '../../common/ThemeProvider';
 import ExistingUser from "./existingUser.component";
 import UserRegister from "./userRegister.component";

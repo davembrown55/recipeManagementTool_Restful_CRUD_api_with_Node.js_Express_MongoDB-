@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useCallback} from 'react';
-import RecipeDataService from "../services/recipe.service";
+import useRecipeService from "../services/recipe.service";
 import { Link } from "react-router-dom";
 import Pagination from '@mui/material/Pagination';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Stack from 'react-bootstrap/Stack';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import ListGroup from 'react-bootstrap/ListGroup';
-import Card from 'react-bootstrap/Card';
+
+import { Container, Row, Stack, Col, Button, Form, ListGroup, Card } from 'react-bootstrap';
+// import Row from 'react-bootstrap/Row';
+// import Stack from 'react-bootstrap/Stack';
+// import Col from 'react-bootstrap/Col';
+// import Button from 'react-bootstrap/Button';
+// import Form from 'react-bootstrap/Form';
+// import ListGroup from 'react-bootstrap/ListGroup';
+// import Card from 'react-bootstrap/Card';
+
 import { useTheme} from '../common/ThemeProvider';
 
 
@@ -36,7 +38,8 @@ const RecipeList = () => {
   const [newSearch, setNewSearch] = useState(true);
   const [currentId, setCurrentId] = useState(null);
 
-  // const getRequestParams = useCallback((searchQuery, page, pageSize) => {
+  const { getAll } = useRecipeService();
+
   const getRequestParams = (searchQuery, page, pageSize) => {
     let params = {};
     if (searchQuery) {
@@ -50,28 +53,24 @@ const RecipeList = () => {
     }
     return params;
   };
-  // }, [searchType, searchQuery, page, pageSize]); 
+  
 
-
-  // const retrieveRecipes = useCallback(() => {    
-  const retrieveRecipes = () => {
-    const params = getRequestParams(searchQuery, page, pageSize);
-
-    RecipeDataService.getAll(params)
-      .then(response => {
-        const { recipes, totalPages, totalItems } = response.data;
-        setRecipes(Array.isArray(recipes) ? recipes : []);
-        setCount(totalPages || 0);
-        setTotalRecipes(totalItems);
-        setValFailedClearResults(false);
-      })
-      .catch(e => {
-        console.log(e);
-        setRecipes([]);
-        setCount(0);
-      });    
-  };      
-  // }, [getRequestParams]); 
+  const retrieveRecipes = useCallback(async () => {
+    try {
+      const params = getRequestParams(searchQuery, page, pageSize);
+      const data = await getAll(params);
+      const { recipes, totalPages, totalItems } = data;
+      setRecipes(Array.isArray(recipes) ? recipes : []);
+      setCount(totalPages || 0);
+      setTotalRecipes(totalItems);
+      setValFailedClearResults(false);
+    } catch (e) {
+      console.error(e);
+      setRecipes([]);
+      setCount(0);
+    }
+  }, [getAll, page, pageSize, searchQuery]);
+  
 
   // Clear recipe array on non-Empty validation fail
   useEffect(() => {  
@@ -84,7 +83,7 @@ const RecipeList = () => {
   // Get recipes
   useEffect(() => {    
       retrieveRecipes();
-  }, [page, pageSize, searchQuery]);
+  }, [page, pageSize, searchQuery, retrieveRecipes]);
 
 
   // Handle search submission when searchWhileTyping is false
