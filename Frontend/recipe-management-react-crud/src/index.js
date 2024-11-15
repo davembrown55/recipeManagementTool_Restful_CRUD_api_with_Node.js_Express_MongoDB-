@@ -5,17 +5,20 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from './common/ThemeProvider';
+import { AuthProvider }  from './auth/AuthContext';
 
 const container = document.getElementById('root');
 const root = createRoot(container); // Create a root.
 
 root.render(
   <React.StrictMode>
-    <ThemeProvider> {/* Wrap the entire app in ThemeProvider */}
-      <BrowserRouter> {/* Wrap App inside BrowserRouter */}
-        <App />
-      </BrowserRouter>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider> {/* Wrap the entire app in ThemeProvider */}
+        <BrowserRouter> {/* Wrap App inside BrowserRouter */}
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
+    </AuthProvider>
   </React.StrictMode>
 );
 

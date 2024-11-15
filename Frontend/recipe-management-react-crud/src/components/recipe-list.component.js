@@ -2,19 +2,8 @@ import React, { useState, useEffect, useCallback} from 'react';
 import useRecipeService from "../services/recipe.service";
 import { Link } from "react-router-dom";
 import Pagination from '@mui/material/Pagination';
-
 import { Container, Row, Stack, Col, Button, Form, ListGroup, Card } from 'react-bootstrap';
-// import Row from 'react-bootstrap/Row';
-// import Stack from 'react-bootstrap/Stack';
-// import Col from 'react-bootstrap/Col';
-// import Button from 'react-bootstrap/Button';
-// import Form from 'react-bootstrap/Form';
-// import ListGroup from 'react-bootstrap/ListGroup';
-// import Card from 'react-bootstrap/Card';
-
 import { useTheme} from '../common/ThemeProvider';
-
-
 
 const RecipeList = () => {
 

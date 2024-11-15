@@ -76,6 +76,12 @@ p {
   padding-left: 1rem;
 }
 
+.userNav {
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 0.5rem;
+}
+
 .page-container {
   padding: 0;
 }

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 
+// authorises (local storage) JWT token sent in 
 const authenticateJWT = (req, res, next) => {
     const token = req.header('Authorization');
     if (!token) return res.status(401).send('Access denied');

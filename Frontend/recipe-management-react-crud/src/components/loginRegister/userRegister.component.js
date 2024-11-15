@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from "react";
-// import RecipeDataService from "../../services/old.recipe.service";
 import useUserService from "../../services/user.service";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Modal from 'react-bootstrap/Modal';
 import {Container, Row, Button, Form, InputGroup } from 'react-bootstrap';
 import { useTheme} from '../../common/ThemeProvider';
 
-import http from '../../http-common';  
-import axios from 'axios';
 
 const UserRegister = () => {
-
     const { register, check } = useUserService();
-
     const { themeVariants } = useTheme(); 
     const [currentUserDetails, setCurrentUserDetails] = useState({
         username: "",
         email: "",        
         password: ""
     });
-
     const [passwordMatch, setPasswordMatch] = useState("");
     const [submittedRegistration, setSubmittedRegistration] = useState(false);
     const [registrationError, setRegistrationError] = useState(false);
@@ -61,7 +55,6 @@ const UserRegister = () => {
                 }
                 try {
                     const response = await check (params);
-                    // console.log(response.data.userNameAvailable);
                     setUsernameAvailable(response.userNameAvailable);
                 } catch (error) {
                     console.error("Error checking username:", error);
@@ -83,16 +76,19 @@ const UserRegister = () => {
                 const params = {
                     email: input                    
                 };
-                if (input.length === 0) {
+                if (errors.emailError || input.length === 0) {
                     setEmailAvailable(null);
                     return;
                 }
                 try {
-                    const response = await check(params);                          
-                    // console.log(response.data.emailAvailable);
+                    const response = await check(params);           
                     setEmailAvailable(response.emailAvailable);
                 } catch (err) {
-                    console.error("Error checking email:", err);  
+                    const error = err.response.data.errors.map((x) => {
+                        if(x.msg === "Invalid email") {return x.msg;}
+                    })
+                    // maybe do something with this if required in the future?
+                    const invalidEmailonServer = error.includes("Invalid email");                    
                     setEmailAvailable(false);
                 }
             };
@@ -226,16 +222,6 @@ const UserRegister = () => {
             }                  
     }
 
-    // const registerUser = async (userDetails) => {
-    //     try {
-    //         const response = await axios.post('/api/auth/register', userDetails);  // Adjust API endpoint
-    //         localStorage.setItem('token', response.data.token);  // Store token on successful registration
-    //         console.log('User registered successfully');
-    //     } catch (error) {
-    //         console.error('Error during registration:', error);
-    //     }
-    // };
-
     const navigate = useNavigate();
 
     const handleRegister = async () => {
@@ -245,22 +231,21 @@ const UserRegister = () => {
                 email: currentUserDetails.email, 
                 password: currentUserDetails.password
             }
-            const response = await register(data);
-
-        // Optionally store token if returned
-        localStorage.setItem('token', response.data.token); 
+            // const response = 
+            await register(data);
+            // console.log(response);
+ 
         setSubmittedRegistration(true);
         } catch (e) {
-        console.error('Registration failed:', e);
-        console.log(` error message: ${e.response.data.msg}`);
         setRegErrMessage(e.response.data.msg);
         setRegistrationError(true);
-        setSubmittedRegistration(true);
-
+        setSubmittedRegistration(true);                
+        // reset password fields
+        let password = "";
+        setCurrentUserDetails({ ...currentUserDetails, password });
+        setPasswordMatch("");
         }
     };
-
-
 
     const hideSubmitRegisterModal = () => {
         if(registrationError) {
@@ -273,10 +258,18 @@ const UserRegister = () => {
         }
     }
 
-    const submitLogin = () => {
-        // console.log(`Current user details: ${JSON.stringify(currentUserDetails)}`)
-        handleRegister();
+    const submitLogin = (event) => {
+        event.preventDefault();
+        if (Object.keys(errors).length > 0
+        || (currentUserDetails.username.trim().length === 0 || 
+            currentUserDetails.password.trim().length === 0 || 
+            currentUserDetails.email.trim().length === 0)) {
+          return;
+        } else {
+            handleRegister();
+        }    
     }
+
     const toggleHidePassword = () => {
         hidePassword ? setHidePassword(false) :  setHidePassword(true) ;
         const passwordInput = document.getElementById("passwordInput");
@@ -304,7 +297,7 @@ const UserRegister = () => {
         <Container as="h4" className="mb-4">
             New User Register
         </Container>
-        <Form>
+        <Form onSubmit={submitLogin}>
         <Container className="d-flex flex-column loginInputArea">
 
         <Form.Group controlId="usernameInput" className="mb-4">
@@ -342,7 +335,7 @@ const UserRegister = () => {
                 >
                 </Form.Control>
                 <Form.Control.Feedback className="" type="invalid">
-                  {errors.emailError || "Email is already in use."}
+                  {errors.emailError || "Email is already in use, or invalid."}
                 </Form.Control.Feedback>
                 <Form.Control.Feedback type="valid">
                     Email is available!
@@ -383,7 +376,7 @@ const UserRegister = () => {
                 <Form.Control
                   type="password"
                   placeholder="Retype Password"
-                  value={currentUserDetails.passwordMatch} 
+                  value={passwordMatch} 
                   data-bs-theme={themeVariants['data-bs-theme']}
                   onChange={onChangePasswordMatch}
                   isInvalid={!!errors.passwordMatchError } 
@@ -402,7 +395,7 @@ const UserRegister = () => {
         </Container>
             <Row xs="auto" className="justify-content-center gap-3">
                    <Button 
-                    onClick={submitLogin} 
+                    type="submit"
                     disabled={
                         Object.keys(errors).length > 0
                         || (currentUserDetails.username.trim().length === 0 || 

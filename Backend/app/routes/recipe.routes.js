@@ -23,6 +23,12 @@ module.exports = app => {
 
     // Delete all Recipes
     router.delete("/", recipes.deleteAll);
+    
+    //test
+    // router.get('/my', authenticateJWT, async (req, res) => {
+    //   const recipes = await Recipe.find({ userId: req.user.id });
+    //   res.json(recipes);
+    // });
   
     app.use('/api/recipes', router);
   };

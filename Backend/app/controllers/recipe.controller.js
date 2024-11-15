@@ -1,5 +1,6 @@
 const db = require("../models");
 const Recipe = db.recipes;
+// const session = require("express-session");  
 
 
 const getPagination = (page, size) =>{
@@ -17,6 +18,10 @@ exports.create = (req, res) => {
         return;
     }
 
+    if (!req.session || !req.session.userId) {
+      return res.status(401).send({ message: "Unauthorized: Please log in to create a recipe." });
+    }
+
     // Create a Recipe
     const recipe = new Recipe({
         title: req.body.title,
@@ -25,8 +30,10 @@ exports.create = (req, res) => {
         instructions: req.body.instructions,
         cookingTimeMinutes: req.body.cookingTimeMinutes,
         diets: req.body.diets,
-        published: req.body.published ? req.body.published : false
+        published: req.body.published ? req.body.published : false,
+        userId: req.session.userId
     });
+   
 
     // Save Recipe in the database
     recipe.save(recipe)
@@ -66,17 +73,33 @@ exports.findAll = (req, res) => {
   const condition = buildCondition(req);
   const { limit, offset } = getPagination(page, size);
 
-  Recipe.paginate(condition, { offset, limit })
+  const options = {
+    offset,
+    limit,  
+    populate:  {path: 'userId',  select: 'username'}, // Adding populate to options
+  };
+
+  Recipe.paginate(condition, options)    
     .then((data) => {
+      const updatedDocs = data.docs.map((recipe) => {
+        // Remove userId and replace it with username
+        const { userId, _id, ...rest } = recipe.toObject();
+        rest.id = _id; // Reformat recipe _id as id
+        if (userId && userId.username) {
+          rest.username = userId.username;  
+        }
+        return rest;
+      });
+
       res.send({
         totalItems: data.totalDocs,
-        recipes: data.docs,
+        recipes: updatedDocs,        
         totalPages: data.totalPages,
         currentPage: data.page - 1,
       });
     })
-    .catch(err => {
-      res.status(500).send({
+    .catch(err => {      
+      res.status(500).send({        
         message: err.message || "An error occurred while retrieving recipes."
       });
     });
@@ -86,11 +109,23 @@ exports.findAll = (req, res) => {
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  Recipe.findById(id)
+  Recipe.findById(id).populate('userId', 'username')
+    
     .then(data => {
       if (!data)
         res.status(404).send({ message: "There is no recipe with the following ID: " + id });
-      else res.send(data);
+      else {
+        const { userId, ...rest } = data.toObject(); // remove userID from reponse
+        if (userId && userId.username) {
+          // rest.username = userId.username;  
+          const {username} = userId;
+          rest.username = username;
+          res.send(rest);
+        } else { 
+          res.send(data);
+        }
+
+      } 
     })
     .catch(err => {
       res
@@ -98,6 +133,22 @@ exports.findOne = (req, res) => {
         .send({ message: "Error retrieving recipe with id=" + id });
     });
 };
+
+// exports.findOne = (req, res) => {
+//   const id = req.params.id;
+
+//   Recipe.findById(id)
+//     .then(data => {
+//       if (!data)
+//         res.status(404).send({ message: "There is no recipe with the following ID: " + id });
+//       else res.send(data);
+//     })
+//     .catch(err => {
+//       res
+//         .status(500)
+//         .send({ message: "Error retrieving recipe with id=" + id });
+//     });
+// };
 
 // Update a recipe by the id in the request
 exports.update = (req, res) => {

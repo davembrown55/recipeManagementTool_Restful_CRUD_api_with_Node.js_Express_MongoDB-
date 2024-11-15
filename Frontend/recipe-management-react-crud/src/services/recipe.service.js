@@ -24,7 +24,7 @@ const useRecipeService = () => {
 
   const create = useCallback(async (data) => {
     try {
-      const response = await http.post('/recipes', data);
+      const response = await http.post('/recipes', data, { withCredentials: true });
       return response.data;
     } catch (error) {
       console.error('Error creating recipe:', error);

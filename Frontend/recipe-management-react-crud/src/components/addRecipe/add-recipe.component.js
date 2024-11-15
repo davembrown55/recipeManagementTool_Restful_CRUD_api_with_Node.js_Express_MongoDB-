@@ -143,8 +143,7 @@ const checkDietsForEmptyFields = () => {
 }
 
 // Save recipe to the database
-const saveRecipe = async () => {
-  
+const saveRecipe = async () => {  
   try{
     // dont include diets if empty
     const data = checkDietsForEmptyFields();

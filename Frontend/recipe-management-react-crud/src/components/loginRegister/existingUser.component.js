@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from "react";
-import useUserService from "../../services/user.service";
-import { useParams, useNavigate } from 'react-router-dom';
-import Modal from 'react-bootstrap/Modal';
+import { useAuth } from '../../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {Container, Row, Button, Form, InputGroup } from 'react-bootstrap';
-import Nav from 'react-bootstrap/Nav';
 import { useTheme} from '../../common/ThemeProvider';
-import axios from 'axios';
 
-const ExistingUser = () => {
-    
+
+const ExistingUser = () => {    
     const { themeVariants } = useTheme(); 
     const [currentUserDetails, setCurrentUserDetails] = useState({
         email: "",
         password: ""
     });
-    const { login, check } = useUserService();
+    const { loginUser } = useAuth();
+    const navigate = useNavigate();
     const [loginFailed, setLoginFailed] = useState(false);
     const [loginMsgTxt, setLoginMsgTxt] = useState({});
-
     const [errors, setErrors] = useState({})
     const [displayInitialPasswordMessage, setDisplayInitialPasswordMessage] = useState(true);
     const [hidePassword, setHidePassword] = useState(true);
-
     const [passwordFocus, setPasswordFocus] = useState(false);
 
-
+    // Event listener to make password validation message visible if passwordInput focused.
     useEffect(() => {
         const passwordInput = document.getElementById("passwordInput");
       
@@ -40,8 +36,7 @@ const ExistingUser = () => {
             passwordInput.removeEventListener("blur", handleBlur);
           };
         }
-      }, []);
-      
+      }, []);      
 
     const onChangeEmail = (e) => {
         const email = e.target.value;
@@ -55,7 +50,6 @@ const ExistingUser = () => {
         } else if (!isValidEmail.test(email)) {
             validationErrors.emailError = 'Invalid Email';
         }
-
         setErrors(validationErrors);   
     }
 
@@ -144,34 +138,42 @@ const ExistingUser = () => {
     }
 
     const handleLogin = async () => {
+        
         const tempLoginMsg = {};
-        try {
-          const response = await login(currentUserDetails);        
-          localStorage.setItem('token', response.data.token); // Store JWT token
 
-          console.log('Login successful, token stored in localStorage.', response);
+        try {
+          await loginUser(currentUserDetails);   
+
           setLoginFailed(false);
           tempLoginMsg.success = "Login successful.";
           setLoginMsgTxt(tempLoginMsg);
-
           let resetUser = { email: "", password: "" };
           setCurrentUserDetails(resetUser);
+          setPasswordFocus(false);
+          navigate('/recipes');
        
         } catch (error) {
-          console.error('Login failed:', error);
-
-          tempLoginMsg.error = error.response.data.msg;
+          if(error.response.data.msg === "Invalid credentials") {
+            tempLoginMsg.error = error.response.data.msg;
+          } else {tempLoginMsg.error = "Error"}                    
+          
           setLoginMsgTxt(tempLoginMsg);
           setLoginFailed(true);
-          let password = "";
-          setCurrentUserDetails({...currentUserDetails, password});
-
+          let password = "";          
+          setCurrentUserDetails({...currentUserDetails, password});          
+          setDisplayInitialPasswordMessage(true);
         }
     };
 
-    const submitLogin = () => {
-        handleLogin();
-    }
+    const submitLogin = (event) => {
+        event.preventDefault();
+        if (Object.keys(errors).length > 0 || 
+            (currentUserDetails.email.trim().length === 0 || currentUserDetails.password.trim().length === 0)) {
+              return;
+        } else {
+            handleLogin();
+        }        
+    }    
 
     const toggleHidePassword = () => {
         hidePassword ? setHidePassword(false) :  setHidePassword(true) ;
@@ -200,12 +202,8 @@ const ExistingUser = () => {
                 return  Object.keys(loginMsgTxt).map((item,index) => {
                     return (<p key={index} className="loginInvalid">Login failed:   {loginMsgTxt[item] }</p>)
                 })
-            }
-            // return loginMsgTxt;
-            
-            
+            }            
         }
-
     }
 
     return (
@@ -213,7 +211,7 @@ const ExistingUser = () => {
             <Container as="h4" className="mb-4">
                 Existing User Login
             </Container>
-            <Form>
+            <Form onSubmit={submitLogin}>
             <Container className="d-flex flex-column loginInputArea">
             <Form.Group controlId="emailInput" className="mb-4">
                   <Form.Label  className="ps-2">Email</Form.Label>
@@ -264,7 +262,7 @@ const ExistingUser = () => {
             </Container>
                 <Row xs="auto" className="justify-content-center gap-3">
                        <Button 
-                        onClick={submitLogin} 
+                        type="submit"
                         disabled={Object.keys(errors).length > 0 || 
                             (currentUserDetails.email.trim().length === 0 || 
                               currentUserDetails.password.trim().length === 0)
@@ -275,10 +273,8 @@ const ExistingUser = () => {
                 </Row>   
                 <Container className="updateMessages"> 
                   <Row className="mt-3 btnDisableTxt">{loginErrorMsg()}</Row> 
-                </Container> 
-                
-            </Form>
-            
+                </Container>                 
+            </Form>            
         </Container>
     );
 };

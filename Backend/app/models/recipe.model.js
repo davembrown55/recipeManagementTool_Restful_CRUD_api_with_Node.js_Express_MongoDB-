@@ -7,7 +7,9 @@ module.exports = (mongoose, mongoosePaginate) => {
             instructions: Array,            
             cookingTimeMinutes: Number,
             diets: Array,
-            published: Boolean
+            published: Boolean,
+            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
 
         },
         {timestamps: true}

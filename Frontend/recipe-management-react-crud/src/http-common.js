@@ -8,14 +8,14 @@ const http =  axios.create({
 });
 
 // Set the Authorization header globally with the JWT token from localStorage
-http.interceptors.request.use(config => {
-  const token = localStorage.getItem('token'); // Retrieve token
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;  // Add the token to the Authorization header
-  }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+// http.interceptors.request.use(config => {
+//   const token = localStorage.getItem('token'); // Retrieve token
+//   if (token) {
+//     config.headers['Authorization'] = `Bearer ${token}`;  // Add the token to the Authorization header
+//   }
+//   return config;
+// }, error => {
+//   return Promise.reject(error);
+// });
 
 export default http;

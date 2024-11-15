@@ -78,6 +78,10 @@ background-color: rgba(210, 232, 223, 1);
     background-color: #eaf1ee;
 }
 
+/* .light .
+background-color: #eaf1ee;
+} */
+
 .light .list-group-item.active {
     background-color: var(--bs-info-text-emphasis);
 }
@@ -119,6 +123,8 @@ background-color: rgba(210, 232, 223, 1);
     border-top-color: rgba(0, 0, 0, 0.175);
     border-left-color: rgba(0, 0, 0, 0.175);
     border-right-color: rgba(0, 0, 0, 0.175);
+    background-color: #eaf1ee;
+    border-bottom-color: #eaf1ee;
 }
 
 .light .passwordInvalid {
