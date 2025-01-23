@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import useRecipeService from "../../services/recipe.service";
 import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, Container, Row, Col, Button, Form, Card } from 'react-bootstrap';
@@ -67,6 +67,9 @@ const Recipe = () => {
   const [noChangesToRecipe, setNoChangesToRecipe] = useState(false);
   const [updateRecipeModal, setUpdateRecipeModal] = useState(false);
   const [deleteRecipeModal, setDeleteRecipeModal] = useState(false);
+  const [serverCallError, setServerCallError] = useState(false);
+  const [serverCallErrorMessage, setServerCallErrorMessage] = useState(null);
+  const [serverCallSuccess, setServerCallSuccess] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {   
@@ -82,7 +85,7 @@ const Recipe = () => {
           recipe.instructions = [""];
         }
         setCurrentRecipe({ ...recipe});
-        setPrevRecipeOnDB({...recipe});  
+        setPrevRecipeOnDB({...recipe});          
   
       } catch (e) {
         console.error(e);
@@ -175,11 +178,21 @@ const Recipe = () => {
 
      setCurrentRecipe({ ...currentRecipe, published: status });
      setPrevRecipeOnDB({ ...currentRecipe, published: status });
-     console.log(response);
+    //  console.log(response);
      setMessage("The Recipe was updated successfully!")
 
     } catch (e) {
-      console.error(e);
+      // console.error(e);
+      if (e.response.status === 401) {        
+        setMessage(`Not authorised to update: ${currentRecipe.title}`);
+      } else if (typeof(e.response.data.errors) !== 'undefined') {
+        const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
+        setMessage(`Error: ${Msg}`);
+      } else if (e.response.status === 404) {
+        setMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
+      } else {
+        setMessage(`failed to update ${currentRecipe.title}`);
+      }     
     }
   };
 
@@ -207,7 +220,11 @@ const Recipe = () => {
     setNoChangesToRecipe(isObjEqual(currentRecipe, prevRecipeOnDB));
     setUpdateRecipeModal(true); 
   } 
-  const hideUpdateRecipeModal = () => setUpdateRecipeModal(false);
+  const hideUpdateRecipeModal = () => { 
+    setUpdateRecipeModal(false) 
+    setServerCallError(false);
+    setServerCallErrorMessage(null);
+  };
 
   const checkDietsForEmptyFields = () => {
     const newDietArray = currentRecipe.diets.filter((diet, i) => diet.trim() !== "" );
@@ -218,31 +235,97 @@ const Recipe = () => {
     if(Object.keys(errors).length !== 0) {return;} // Stop the function if validation fails    
     try{
       const recipeData = checkDietsForEmptyFields();
-
       const response = await update(currentRecipe.id, recipeData);
-      console.log(response);
+      hideUpdateRecipeModal();
+      
       setMessage("The Recipe was updated successfully!");
+      setMessage(response.msg);
       setPrevRecipeOnDB({...currentRecipe}); // update prevRecipeOnDB for next comparison    
 
     } catch (e) {
-      console.error(e);
-    }
-    hideUpdateRecipeModal();
+      // console.error(e);
+      setServerCallError(true);      
+      if (e.response.status === 401) {        
+        setServerCallErrorMessage(`Not authorised to update: ${currentRecipe.title}`);
+      } else if (typeof(e.response.data.errors) !== 'undefined') {
+        const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
+        setServerCallErrorMessage(`Error: ${Msg}`);
+      } else if (e.response.status === 400) {
+        setServerCallErrorMessage(`No valid fields to update`);
+      } else if (e.response.status === 404) {
+        setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
+      } else {
+        setServerCallErrorMessage(`failed to update ${currentRecipe.title}`);
+      }     
+    }    
+  }
+
+  const updateRecipeModalBodyContent = () => {
+    if (noChangesToRecipe) {
+      return `No changes to update!`;
+    } else if (serverCallError) {
+      return `${serverCallErrorMessage}`;
+    } else if (updateRecipeModal === false) {
+      return null;
+    } else {
+      return `Are you sure you want to update: ${currentRecipe.title}?`;
+    }  
   }
 
   const deleteRecipe = async() => {    
     try {
-      const response = await remove(currentRecipe.id);
-      console.log(response);
-      navigate('/Recipes');
+      await remove(currentRecipe.id);
+      // await remove('712638712638721gg');
+      setServerCallSuccess(true);
     } catch (e) {
-      console.error(e);
+      setServerCallError(true);      
+      if (e.response.status === 401) {        
+        setServerCallErrorMessage(`Not authorised to delete: ${currentRecipe.title}`);
+      } else if (typeof(e.response.data.errors) !== 'undefined') {
+        const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
+        setServerCallErrorMessage(`Error: ${Msg}`);
+      } else if (e.response.status === 404) {
+        setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
+      } else {
+        setServerCallErrorMessage(`failed to delete ${currentRecipe.title}`);
+      }      
     }
   }
 
-  const showDeleteRecipeModal = () => setDeleteRecipeModal(true);  
-  const hideDeleteRecipeModal = () => setDeleteRecipeModal(false);
+  const showDeleteRecipeModal = () => setDeleteRecipeModal(true); 
+  
+  const hideDeleteRecipeModal = () => {  
+    setDeleteRecipeModal(false);    
+    setServerCallError(false);
+    setServerCallErrorMessage(null);
+    // setDeleteRecipeModal(false);    
+    if(serverCallSuccess) {
+      setCurrentRecipe({
+        id: null,
+        title: "",
+        description: "",
+        published: false,
+        cookingTimeMinutes: 0,
+        ingredients: [""],
+        instructions: [""], 
+        diets: [""]
+      })
+      setServerCallSuccess(false);
+      navigate('/Recipes');
+    }
+  }
 
+  const deleteRecipeModalBodyContent = () => {
+    if (serverCallError) {
+      return `${serverCallErrorMessage}`;
+    } else if (serverCallSuccess) {
+      return `Successfully deleted: ${currentRecipe.title}.`;
+    } else if (deleteRecipeModal === false) {
+      return null;
+    } else {
+      return `Are you sure you want to delete: ${currentRecipe.title}?`;
+    }  
+  }
 
   const { themeVariants } = useTheme(); 
 
@@ -436,13 +519,14 @@ const Recipe = () => {
                       <Modal.Title >Delete Recipe</Modal.Title>
                     </Modal.Header>
                     <Modal.Body >
-                      Are you sure you want to delete: {currentRecipe.title}?
+                      {deleteRecipeModalBodyContent()}
                     </Modal.Body>
                     <Modal.Footer>
                       <Button variant="secondary" onClick={hideDeleteRecipeModal}>
                         Close
                       </Button>
-                      <Button variant="primary" onClick={(e) => deleteRecipe()}>Yes</Button>
+                      {(serverCallError === true || serverCallSuccess === true) ? null : <Button variant="primary" onClick={(e) => deleteRecipe()}>Yes</Button> }
+                                            
                     </Modal.Footer>
                   </Modal>  
 
@@ -466,8 +550,9 @@ const Recipe = () => {
                       <Modal.Title >Update Recipe</Modal.Title>
                     </Modal.Header>
                     <Modal.Body >
-                      {noChangesToRecipe ? `No changes to update!`:
-                       `Are you sure you want update: ${currentRecipe.title}?`}                      
+                      {updateRecipeModalBodyContent()}
+                      {/* {noChangesToRecipe ? `No changes to update!`:
+                       `Are you sure you want update: ${currentRecipe.title}?`}                       */}
                     </Modal.Body>
                     <Modal.Footer>
                       <Button 
@@ -475,8 +560,9 @@ const Recipe = () => {
                         onClick={hideUpdateRecipeModal}>
                         Close
                       </Button>
-                      {!noChangesToRecipe &&
-                      <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button>}
+                      {noChangesToRecipe === true || serverCallError == true ? null : <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button> }
+                      {/* {!noChangesToRecipe &&
+                      <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button>} */}
                     </Modal.Footer>
                   </Modal>  
 

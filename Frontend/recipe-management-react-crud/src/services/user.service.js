@@ -158,6 +158,7 @@ const useUserService = () => {
       }, []);
 
       const removeProfile = useCallback(async (id) => {
+        // if succesful navigate to 'logout' route from component that called this
         try {
           const response = await http.delete('auth/delete-profile', 
                                               {data: {id: id},  withCredentials: true } );

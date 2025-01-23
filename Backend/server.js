@@ -1,25 +1,20 @@
+// Initialize the app
 const express = require("express");
+const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const cors = require("cors");
+const cors = require("cors"); 
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const rateLimit = require("express-rate-limit");
-
-const app = express();
-require('dotenv').config();
 const db = require("./app/models");
 const helmet = require('helmet');
 
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-	standardHeaders: true, 
-	legacyHeaders: true, 
-	
-})
-app.use(limiter)
 
+// Load environment variables
+require('dotenv').config();
+
+// Security-related middlewares
 app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -29,11 +24,37 @@ app.use(helmet({
     }
   }));
 
+// Apply rate limiters
+// Define a stricter rate limiter for login and register routes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 requests per windowMs (stricter limit for security)
+    message: 'Too many attempts from this IP, please try again after 15 minutes',
+    standardHeaders: true, 
+    legacyHeaders: false,
+});
+
+// Define a more relaxed rate limiter for other routes
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // Limit each IP to 200 requests per windowMs (relaxed limit)
+    standardHeaders: true, 
+    legacyHeaders: false,
+});
+
+// Apply the stricter limiter to specific routes
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use(generalLimiter)
+
+
+// CORS settings
 var corsOptions =  {
     origin: "http://localhost:8081",
     credentials: true 
 };
 
+//Parse Incoming requests
 app.use(cors(corsOptions));
 // Parse requests of content type - application/json
 app.use(bodyParser.json());
@@ -42,14 +63,7 @@ app.use(bodyParser.urlencoded({ extended: true}));
 //Parse cookies
 app.use(cookieParser());
 
-// Content Security Policy (CSP) // handled with helmet, as above
-// app.use((req, res, next) => {
-//     res.setHeader(
-//       "Content-Security-Policy",
-//       "default-src 'self'; script-src 'self';"
-//     );
-//     next();
-// });
+
 
 // Session storage
 app.use(session({
@@ -62,25 +76,26 @@ app.use(session({
         secure: false, // Set to true if using HTTPS
         httpOnly: true,
         maxAge: 60 * 60 * 1000 // 1-hour session expiry
+        // maxAge: 1 * 30 * 1000 // 30 seconds
     }
 }));
 
+// Routes
+app.use('/api/recipes', require("./app/routes/recipe.routes"));
+app.use('/api/auth', require("./app/routes/auth.routes"));
 
 //simple route
 app.get("/", (req, res) => {
     res.json({ message: "Welcome to the recipe management tool"})
 });
 
-require("./app/routes/recipe.routes")(app);
- 
-app.use('/api/auth', require("./app/routes/auth.routes"));
-
-//Set port, listen for requests
+//Set port, and start the server
 const PORT = process.env.PORT || 8080; 
 app.listen(PORT, () => {
     console.log(`Server is runnning on port: ${PORT}.`);
 });
 
+// Database connection
 db.mongoose
     .connect(db.url, {
         // useNewUrlParser: true,

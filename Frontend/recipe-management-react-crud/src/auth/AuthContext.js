@@ -28,8 +28,6 @@ export const AuthProvider = ({ children }) => {
       console.log(response.data.message);
       setUserRole(null);
       setUserName(null);
-      console.log('User Logged Out');
-
     } catch (e) {
       console.log(e);
     }
@@ -42,16 +40,19 @@ export const AuthProvider = ({ children }) => {
       setUserName(response.username);
       console.log('verified');
     } catch (e) {      
-      if (typeof e !== 'undefined' || typeof e.response !== 'undefined' || typeof e.response.data !== 'undefined' ) {
-        if( e.response.data === 'Unauthorized') {
-          const message = 'Access Denied. Your login session may have expired.'; 
-          throw message;
-        }         
-      } 
-      // else if (err.response.data === 'Unauthorized') {
-      //   return ('monkeys');
-      // } 
-      else {throw e;}
+        if(typeof e.response.status !== 'undefined' && e.response.status === 401) {
+            const message = 'Access Denied. Your login session may have expired.'; 
+            setUserRole(null);
+            setUserName(null);
+            throw message;
+        } else {
+            console.log('Error. User logged out');
+            logoutUser();
+            setUserRole(null);
+            setUserName(null);
+            throw e;
+        }       
+      // }            
     }    
   };   
   

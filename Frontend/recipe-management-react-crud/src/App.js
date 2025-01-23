@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import "./App.css";
 import AddRecipe from "./components/addRecipe/add-recipe.component";
 import Recipe from "./components/recipe/recipe.component";
-import RecipeList from "./components/recipe-list.component";
+import RecipeList from "./components/recipeLists/recipe-list.component";
 import UserLogin from "./components/loginRegister/userLogin.component";
 import AdminPanel from "./components/admin/adminPanel.component";
 import UserProfile from "./components/userProfile/userProfile.component";
@@ -75,11 +75,11 @@ const App = () => {
 
           <Container fluid className="page-container mt-5">            
               <Routes>
-                <Route path="/" element={<RecipeList />} />
-                <Route path="/recipes" element={<RecipeList />} />
+                <Route path="/" element={<RecipeList type='all'/>} />
+                <Route path="/recipes" element={<RecipeList type='all'/>} />
                 <Route path="/recipes/:id" element={<Recipe />} />
                 <Route element={<ProtectedRoutes/>}>
-                  <Route path="/my-recipes" element={<RecipeList />}  />
+                  <Route path="/my-recipes" element={<RecipeList type='mine' />}  />
                   <Route path="/add" element={<AddRecipe />}  />                  
                   <Route path="/userProfile" element={<UserProfile />}  />
                   <Route path="/my-recipes" element={<RecipeList />}  />                  

@@ -139,3 +139,6 @@ background-color: #eaf1ee;
 .dark .loginInvalid {
     color: #ea868f;
 }
+.dark .form-check-input {
+    --bs-body-bg: #a7acb1;
+}

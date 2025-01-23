@@ -9,18 +9,22 @@ module.exports = (mongoose, mongoosePaginate) => {
             diets: Array,
             published: Boolean,
             userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-
-
         },
         {timestamps: true}
     );
 
     // Custom without version (__v), replacing _id with id. Not required after Mongoose version 5
+    // remove userID from reponse and replace with username
 
     schema.method("toJSON", function() {
-        const { __v, _id, ...object } = this.toObject();
-        object.id = _id;
-        return object;
+        const { __v, _id, userId, ...rest } = this.toObject();        
+        rest.id = _id;
+
+        
+        if(userId && typeof userId === 'object' && userId.username) {
+            rest.username = userId.username;
+        }
+        return rest;
     });
 
     schema.plugin(mongoosePaginate); 

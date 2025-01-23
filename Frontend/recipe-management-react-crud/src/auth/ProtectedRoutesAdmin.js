@@ -1,5 +1,5 @@
 import  React, { useState, useEffect } from 'react';
-import {  Navigate, Outlet } from 'react-router-dom';
+import {  Navigate, Outlet, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { Spinner, Container } from 'react-bootstrap';
 import { useTheme } from '../common/ThemeProvider';
@@ -36,7 +36,7 @@ const ProtectedRoutesAdmin = () => {
     
   }
 
-  return  userRole === 'admin' ? <Outlet /> : <Navigate to='/login' />;
+  return  userRole === 'admin' ? <Outlet /> : <Navigate as={Link} to={'/login/existingUser'} />;
 
   };
 

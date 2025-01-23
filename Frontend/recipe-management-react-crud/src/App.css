@@ -245,6 +245,13 @@ p {
 .passwordInvalid {
   font-size: .875em;
 }
+
+/* #title-on-off {
+  
+  --bs-body-bg: #dee2e6;
+} 
+*/
+
 /* .passwordInvalid:before {
   position: relative;
   left: -35px;

@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback} from 'react';
 import useRecipeService from "../services/recipe.service";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Pagination from '@mui/material/Pagination';
-import { Container, Row, Stack, Col, Button, Form, ListGroup, Card } from 'react-bootstrap';
+import { Container, Row, Stack, Col, Button, Form, ListGroup, Card, Nav } from 'react-bootstrap';
 import { useTheme} from '../common/ThemeProvider';
+import { useAuth }  from '../auth/AuthContext';
 
 const RecipeList = () => {
+  const navigate = useNavigate();
+  
 
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 577);
   const [searchWhileTyping, setSearchWhileTyping] = useState(true);
@@ -28,6 +31,7 @@ const RecipeList = () => {
   const [currentId, setCurrentId] = useState(null);
 
   const { getAll } = useRecipeService();
+  const { userRole, userName, verify } = useAuth();
 
   const getRequestParams = (searchQuery, page, pageSize) => {
     let params = {};
@@ -53,6 +57,9 @@ const RecipeList = () => {
       setCount(totalPages || 0);
       setTotalRecipes(totalItems);
       setValFailedClearResults(false);
+      if(userRole === 'admin' && data.role === 'user') {
+        await verify();
+      }
     } catch (e) {
       console.error(e);
       setRecipes([]);
@@ -302,13 +309,29 @@ const RecipeList = () => {
     }    
   }
 
-  return (
+  // const handleSelect = (selectedKey) => {
+  //   if (selectedKey === "ExistingUser") {
+  //       navigate("/login/existingUser");
+  //   } else {
+  //       navigate("/login/register");
+  //   }
+  // };
 
-    <Container fluid  className='list-container p-0'>
-      <Stack gap={1}>
-        <Form  onSubmit={handleFormSubmit} className="small-screen-ps" noValidate> 
+  // const renderTabContent = () => {
+  //   if (activeTab === "ExistingUser") {
+  //       return <ExistingUser />;
+  //   } else if (activeTab === "UserRegister") {
+  //       return <UserRegister />;
+  //   }
+  // };
 
-          <Row xs={2} className="col-md-9 pt-3">
+  const renderSearchForm = () => {
+    return (
+      <Form  onSubmit={handleFormSubmit} 
+             className="px-2 py-3 d-flex flex-column align-items-center" 
+             noValidate> 
+
+          <Row xs={2} className="col-12 col-md-9 pt-3">
             <Col xs={8} >
               <Form.Control 
                 type="text"
@@ -338,7 +361,7 @@ const RecipeList = () => {
             </Col>
           </Row>          
 
-          <Row className="align-items-center col-md-10">
+          <Row  className="align-items-center col-12 col-md-9">
             <Col xs={12} md={6}>
               <p className="ps-2 pb-1 mb-0 small-text">Search Options:</p>
               <Form.Select 
@@ -349,6 +372,7 @@ const RecipeList = () => {
                 <option value="title" label="Search by Title">Title</option>
                 <option value="maxCookingTime" label="Search by Max Cooking Time">Max Cooking Time</option>
                 <option value="ingredients" label="Search by Ingredient">Ingredient</option>
+
               </Form.Select>  
               <Form.Check 
                 type="switch"
@@ -362,7 +386,52 @@ const RecipeList = () => {
               />
             </Col>
           </Row>
-        </Form>
+          </Form>
+    );
+
+  }
+
+  return (
+
+    <Container fluid  className='list-container p-0'>
+      <Stack gap={1}>
+        {/* // Make this call one of two seperate componenents? standard search, or advanced search*/}
+        
+        <Card
+          bg={themeVariants.variant === 'dark' ? 'dark' : ''}
+          variant={themeVariants.variant}
+          key={themeVariants.variant}
+          text={themeVariants.text}
+        >
+        {/* <Card.Header className="loginCardHeader" 
+                variant={themeVariants.variant}
+                bg={themeVariants.variant === 'dark' ? 'dark' : ''}
+              >
+                <Nav 
+                  variant="tabs" 
+                  activeKey={activeTab}
+                // onSelect={(selectedKey) => setActiveTab(selectedKey)}
+                  onSelect={handleSelect}
+                  data-bs-theme={themeVariants['data-bs-theme']} 
+                >
+                  <Nav.Item>
+                      <Nav.Link eventKey="ExistingUser" >User Login</Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                      <Nav.Link eventKey="UserRegister">New User</Nav.Link>
+                  </Nav.Item>
+                </Nav>
+      </Card.Header> */}
+      <Card.Body>  
+      {renderSearchForm()}
+      </Card.Body>
+
+        
+        </Card>  
+        
+
+        {/*  */}
+        
         <Row >         
         <Col xs={12} md={6} className="d-flex mt-1">
               <Col xs={6}  className='small-screen-ps'>
@@ -490,11 +559,19 @@ const RecipeList = () => {
                   </ListGroup>   
 
                 </Card.Body >
-                <Button variant="primary" className="align-self-end mb-3 me-3" >
+                {userName === currentRecipe.username ? 
+                  <Button variant="primary" className="align-self-end mb-3 me-3" >
                     <Link to={`/recipes/${currentRecipe.id}`} className="text-light">
                       View and Edit
                     </Link>
-                </Button> 
+                  </Button>
+                  :
+                  <Button variant="primary" className="align-self-end mb-3 me-3" >
+                    <Link to={`/recipes/${currentRecipe.id}`} className="text-light">
+                      View
+                    </Link>
+                  </Button>
+                }                
               </Card>
             )}
           </Col>

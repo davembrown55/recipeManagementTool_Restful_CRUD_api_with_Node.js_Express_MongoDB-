@@ -7,7 +7,10 @@ import ExistingUser from "./existingUser.component";
 import UserRegister from "./userRegister.component";
 
 const UserLogin = () => {
+    
     const { themeVariants } = useTheme(); 
+    // if(!!theme) {setTheme(theme)};
+    // console.log(theme);
     const navigate = useNavigate();
     const location = useLocation();
 

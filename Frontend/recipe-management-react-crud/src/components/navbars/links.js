@@ -34,7 +34,7 @@ import ThemeToggle from '../../common/ThemeToggle';
         return (
           <Nav className="me-auto userNav" variant="underline" activeKey={location.pathname}>
             <Nav.Link as={Link} to={"/recipes"} href={"/recipes"}>All Recipes</Nav.Link>
-            <Nav.Link as={Link} to={"/login"} href={"/login"}>Login</Nav.Link>
+            <Nav.Link as={Link} to={"/login/existingUser"} href={"/login"}>Login</Nav.Link>
             <ThemeToggle />
           </Nav>
         );
@@ -42,7 +42,7 @@ import ThemeToggle from '../../common/ThemeToggle';
         return (
           <Nav className="me-auto userNav" variant="underline" activeKey={location.pathname}>
             <Nav.Link as={Link} to={"/recipes"} href={"/recipes"}>All Recipes</Nav.Link>
-            <Nav.Link as={Link} to={"/login"} href={"/login"}>Login</Nav.Link>
+            <Nav.Link as={Link} to={"/login/existingUser"} href={"/login"}>Login</Nav.Link>
             <ThemeToggle />
           </Nav>
         );

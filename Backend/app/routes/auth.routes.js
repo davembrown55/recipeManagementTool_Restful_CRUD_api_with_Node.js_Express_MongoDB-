@@ -159,7 +159,7 @@ const verifySession = (req, res, next) => {
     if (req.session && req.session.userId) {
       next();
     } else {
-      res.status(401).send('Unauthorized');
+      res.status(401).send('Unauthorised. No log-in session detected');
     }
   };
   
@@ -197,7 +197,7 @@ const verifyToken = (req, res, next) => {
 //     }
 // };
   
-router.get('/user-info', verifySession, (req, res) => {
+router.get('/user-info', verifySession, (req, res) => {    
 const user = { username: he.decode(req.session.username), 
                 role:  req.session.userRole, 
                 email: req.session.email
@@ -416,7 +416,7 @@ router.patch('/profile-update',
         // call update user function
         try {
             await updateUser(updateBody, req.body.id, 'user', res);
-            } catch (e) {
+        } catch (e) {
             res.status(500).json({ msg: 'Server error', error: e.message });
         }           
 
@@ -425,14 +425,19 @@ router.patch('/profile-update',
 
 );
 
+const deleteUser = async (id) => {
+
+}
+
 router.delete('/admin/delete-user', 
     verifyAdminWithSession, 
-    body('id').trim().escape().notEmpty().isMongoId().withMessage('Invalid user ID format'),
+    check('id').trim().escape().notEmpty().isMongoId().withMessage('Invalid user ID format'),
     async (req, res) => {
         const errors = validationResult(req);
 
-        if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() });}          
-        const {id} = req.body;    
+        if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() });}   
+        
+        // const {id} = req.body; 
 
         const existingUser = await User.findById(id);
         if (!existingUser) {
@@ -453,17 +458,12 @@ router.delete('/admin/delete-user',
 router.delete('/delete-profile', 
     verifySession,
     check('id').trim().escape().notEmpty().isMongoId().withMessage('Invalid user ID format'),
-    async (req, res) => {
-       
+    async (req, res) => {       
 
         const errors = validationResult(req);
         if (!errors.isEmpty())  {return res.status(400).json({ errors: errors.array() });}            
 
         const { id } = req.body;  
-
-        // console.log(`req.data = ${req.data}.`);      
-        // console.log(`req = ${req}.`);
-        // console.log(`id = ${id}.`);
              
         //User can only delete their own profile
         if(req.session.userId !== id) {
@@ -483,10 +483,5 @@ router.delete('/delete-profile',
         }
      }
 )
-
-
-
-
-
 
 module.exports = router;
