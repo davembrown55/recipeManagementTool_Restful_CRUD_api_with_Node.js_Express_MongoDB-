@@ -29,7 +29,7 @@ const useUserService = () => {
             if(error.response.data === 'Unauthorized'){
               console.log('Unauthorized!!');
             } else if (typeof(error.response.data.errors) !== 'undefined'){
-              const Msg = error.response.data.errors.map((x) => {return x.msg}); 
+              const Msg = error.response.data.errors.map((x) => {return x.msg}).join(', '); 
               console.log(Msg);
             } else {throw error;}
         }
@@ -62,15 +62,23 @@ const useUserService = () => {
       const fetchSecureData = useCallback( async () => {
         try {
           const response = await http.get('auth/secure-data', { withCredentials: true });
+          
           if (response.data.hasOwnProperty('sessionVerified')){
               const user = response.data.sessionVerified;
               return(user);
-          } 
-          // else if (response.data === 'Unauthorized') {
-          //   return 'Access Denied. Your login session may have expired.'; 
-          // }         
-        } catch (err) {
-          throw err;
+          } else {
+            return 401; 
+          }
+          
+            // 'Access Denied. Your login session may have expired.'; 
+                   
+        } catch (err) {          
+          if (err.response.status === 401) {
+            return 401; 
+          } else {
+            return err;
+          }
+          
         }
       }, []);
 

@@ -1,5 +1,6 @@
 const db = require("../models");
 const Recipe = db.recipes;
+const ObjectId = require('mongoose').Types.ObjectId;
 // const Recipe = require('../models/recipe.model');
 // const session = require("express-session"); 
 // const sanitizeHtml = require('sanitize-html');
@@ -32,7 +33,7 @@ exports.create = async (req, res) => {
     //     });
     // }
     
-    const { title, description, ingredients, instructions, cookingTimeMinutes, diets, published } = req.body;
+    const { title, description, ingredients, instructions, cookingTimeMinutes, diets, mealTypes, published } = req.body;
 
 
     // Create a Recipe
@@ -45,6 +46,7 @@ exports.create = async (req, res) => {
         instructions,
         cookingTimeMinutes,
         diets,
+        mealTypes,
         published,
         userId: req.session.userId // Assuming you assign the logged-in user ID to the recipe
     });
@@ -63,36 +65,48 @@ exports.create = async (req, res) => {
 const buildQueryCondition = (query) => {
     let condition = {};
 
-    const { title, ingredients, maxCookingTime, diets } = query; 
+    const { title, ingredients, maxCookingTime, diets, mealTypes } = query; 
 
     if (title) {
       condition.title = { $regex: new RegExp(title), $options: "i" };
     }
 
     if (ingredients) {      
-      if (Array.isArray(ingredients) && ingredients.length > 1) {
+      if (Array.isArray(ingredients) && ingredients.length > 0) {
           // Build an array of RegExp objects to pass to $all
           const regexes = ingredients.map(ing => new RegExp(`^${ing}`, 'i'));
           condition.ingredients = { $all: regexes };
         } else {
-          // Single ingredient
+          // Single ingredient (Quick search uses String not array)
           const single = new RegExp(`^${ingredients}`, 'i');
           condition.ingredients = { $elemMatch: { $regex: single } };
-        }        
+        }  
+       
       }  
       if (maxCookingTime) {
         condition.cookingTimeMinutes = { $lte: Number(maxCookingTime) };
       }
       if (diets) {
-        if (Array.isArray(diets) && diets.length > 1) {
+        if (Array.isArray(diets) && diets.length > 0) {
           // Build an array of RegExp objects to pass to $all
           const regexes = diets.map(diet => new RegExp(`^${diet}`, 'i'));
           condition.diets = { $all: regexes };
         } else {
-          // Single diet
+          // Single diet (Quick search uses String not array)
           const single = new RegExp(`^${diets}`, 'i');
           condition.diets = { $elemMatch: { $regex: single } };
-        }  
+        }          
+      }
+      if (mealTypes) {
+        if (Array.isArray(mealTypes) && mealTypes.length > 0) {
+          // Build an array of RegExp objects to pass to $all
+          const regexes = mealTypes.map(mealType => new RegExp(`^${mealType}`, 'i'));
+          condition.mealTypes = { $all: regexes };
+        } else {
+          // Single mealType (Quick search uses String not array)
+          const single = new RegExp(`^${mealTypes}`, 'i');
+          condition.mealTypes = { $elemMatch: { $regex: single } };
+        } 
       }
       return condition;
     
@@ -100,66 +114,107 @@ const buildQueryCondition = (query) => {
 
 // Retrieve all recipes from the database. Handle requests re: title, ingredients and maxCookingTime
 // Now incorporated into findAll
-exports.oldFindAll = async (req, res) => {
-    // const { page, size } = req.query;
-    const { page, size } =  req.searchType === 'advanced' ? req.body : req.query ;   
+// exports.oldFindAll = async (req, res) => {
+//     // const { page, size } = req.query;
+//     const { page, size } =  req.searchType === 'advanced' ? req.body : req.query ;   
 
-    let condition = {};
-    req.searchType === 'advanced' ? condition = buildQueryCondition(req.body) : condition = buildQueryCondition(req.query);
+//     let condition = {};
+//     req.searchType === 'advanced' ? condition = buildQueryCondition(req.body) : condition = buildQueryCondition(req.query);
 
-    const { limit, offset } = getPagination(page, size);
+//     const { limit, offset } = getPagination(page, size);
   
-    const options = {
-      offset,
-      limit,  
-      populate:  {path: 'userId',  select: 'username'}, // Adding populate to options
-    };
+//     const options = {
+//       offset,
+//       limit,  
+//       populate:  {path: 'userId',  select: 'username'}, // Adding populate to options
+//     };
 
-    try {
-      const foundRecipes = await Recipe.paginate(condition, options);
-      res.send({
-        totalItems: foundRecipes.totalDocs,
-        recipes: foundRecipes.docs,
-        totalPages: foundRecipes.totalPages,
-        currentPage: foundRecipes.page - 1,
-        role: req.authdRole
-      });
-    } catch (e) {
-      res.status(500).send({
-        message:
-          e.message || "An error occurred while retrieving recipes."
-      });
-    }  
+//     try {
+//       const foundRecipes = await Recipe.paginate(condition, options);
+//       res.send({
+//         totalItems: foundRecipes.totalDocs,
+//         recipes: foundRecipes.docs,
+//         totalPages: foundRecipes.totalPages,
+//         currentPage: foundRecipes.page - 1,
+//         role: req.authdRole
+//       });
+//     } catch (e) {
+//       res.status(500).send({
+//         message:
+//           e.message || "An error occurred while retrieving recipes."
+//       });
+//     }  
    
-  };
+//   };
   
   // Find a single recipe with an id
-  exports.findOne = (req, res) => {
-    const id = req.params.id;
-  
-    Recipe.findById(id).populate('userId', 'username')
+  // exports.findOne = (req, res) => {
+  //   const id = req.params.id;  
+  //   Recipe.findById(id).populate('userId', 'username')
       
-      .then(data => {
-        if (!data)
-          res.status(404).send({ message: "There is no recipe with the following ID: " + id });
-        else {
-          // const { userId, ...rest } = data.toObject(); // remove userID from reponse
-          // if (userId && userId.username) {
-          //   // rest.username = userId.username;  
-          //   const {username} = userId;
-          //   rest.username = username;
-          //   res.send(rest);
-          // } else { 
-            res.send(data);
-          // }
+  //     .then(data => {
+  //       if (!data)
+  //         res.status(404).send({ message: "There is no recipe with the following ID: " + id });
+  //       else {
+  //         // const { userId, ...rest } = data.toObject(); // remove userID from reponse
+  //         // if (userId && userId.username) {
+  //         //   // rest.username = userId.username;  
+  //         //   const {username} = userId;
+  //         //   rest.username = username;
+  //         //   res.send(rest);
+  //         // } else { 
+  //           res.send(data);
+  //         // }
   
+  //       } 
+  //     })
+  //     .catch(err => {
+  //       res
+  //         .status(500)
+  //         .send({ message: "Error retrieving recipe with id=" + id });
+  //     });
+  // };
+
+  exports.findOne = async (req, res) => {
+    const  id  = req.params.id;
+    const role = req.authdRole;
+    let userId = req.session ? req.session.userId : false;
+
+    
+    try {
+      const recipe = await Recipe.findById(id).populate('userId', 'username');
+      // console.log(`userId: ${userId},  recipe.userId._id: ${recipe.userId._id.toString()}, === : ${userId === recipe.userId._id.toString()}`);
+
+      if (!recipe) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }  
+
+      if (role === 'admin' || 
+            (role === 'user' && userId === recipe.userId._id.toString())) {
+
+              const response = {
+                access: 'all',
+                recipe: recipe
+              }            
+              return res.json(response);
+
+      } else {
+        // not admin or user linked to recipe
+        if(recipe.published) {
+          const response = {
+            access: 'read',
+            recipe: recipe
+          }            
+          return res.json(response);
+        } else {
+          return res.status(401).send(`Unauthorised user credentials!`);
         } 
-      })
-      .catch(err => {
-        res
-          .status(500)
-          .send({ message: "Error retrieving recipe with id=" + id });
-      });
+      }     
+
+    } catch (e) {
+      return res.status(500).json({ msg: 'Server error', error: e.message });
+    }
+    
   };
 
   const processRecipeUpdate = async (req, res, updateBody, recipeId, role) => {   
@@ -250,7 +305,7 @@ exports.oldFindAll = async (req, res) => {
     const recipeId = req.params.id;      
 
     const updateBody = buildUpdateBody(req.body, ['title', 'description', 'ingredients', 'instructions',
-       'cookingTimeMinutes', 'diets', 'published']);
+       'cookingTimeMinutes', 'diets', 'mealTypes', 'published']);
 
     if (Object.keys(updateBody).length > 0) {
       try {
@@ -364,7 +419,7 @@ exports.findAllUserRecipes = async (req, res) => {
     });
   }       
 };
-// get user recipes
+// get recipes / user / admin & non-user
 exports.findAll = async (req, res) => {
 
   const { page, size } =  req.searchType === 'advanced' ? req.body : req.query;

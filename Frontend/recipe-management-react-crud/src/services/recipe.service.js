@@ -27,9 +27,16 @@ const useRecipeService = () => {
     try {
       const response = await http.get(`/recipes/${id}`, { withCredentials: true });
       return response.data;
-    } catch (error) {
-      console.error(`Error fetching recipe with id ${id}:`, error);
-      throw error;
+    } catch (error) {      
+      if (error.response.status === 401) {        
+        return { 
+          status: error.response.status, 
+          message: error.response.data 
+        };
+      }
+
+      // console.error(`Error fetching recipe with id ${id}:`, error);
+      // throw error;
     }
   }, []);
 

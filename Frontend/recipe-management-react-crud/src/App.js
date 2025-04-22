@@ -20,6 +20,9 @@ import GetNavLinks from "./components/navbars/links";
 
 import useUserService from "./services/user.service";
 
+import EditRecipe from "./components/recipe/edit-recipe";
+import ViewRecipe from "./components/recipe/view-recipe";
+
 
 const App = () => {
   const { themeVariants } = useTheme();
@@ -78,6 +81,7 @@ const App = () => {
                 <Route path="/" element={<RecipeList type='all'/>} />
                 <Route path="/recipes" element={<RecipeList type='all'/>} />
                 <Route path="/recipes/:id" element={<Recipe />} />
+                {/* <Route path="/recipes/:id" element={<EditRecipe />} /> */}
                 <Route element={<ProtectedRoutes/>}>
                   <Route path="/my-recipes" element={<RecipeList type='mine' />}  />
                   <Route path="/add" element={<AddRecipe />}  />                  

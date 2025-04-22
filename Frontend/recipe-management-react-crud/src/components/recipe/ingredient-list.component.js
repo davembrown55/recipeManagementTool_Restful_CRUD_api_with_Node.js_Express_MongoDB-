@@ -55,13 +55,38 @@ const IngredientList = ({
     if(index > 0){
       return(
         <Button     
-        variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
+        variant='outline-danger'
         className="ing-smaller-btn border-0"      
         onClick={(e) => showRemoveIngModal(index)}
         > 
           <i className="bi bi-trash"></i>
         </Button>
   )}}
+
+  const addBtnVisible = (index) => {
+        if (currentRecipe.ingredients.length === 0 ) {
+            return (
+                <Button 
+                variant='outline-success'
+                className="ing-smaller-btn border-0" 
+                onClick={(e) => addIngredient()}
+                >
+                    <i className="bi bi-plus-square"></i>
+                </Button>
+            )      
+        } else if (currentRecipe.ingredients[index].trim().length > 0 
+                    && index === currentRecipe.ingredients.length -1) {
+                return (
+                    <Button 
+                    variant='outline-success'
+                    className="ing-smaller-btn border-0" 
+                    onClick={(e) => addIngredient()}
+                    >
+                        <i className="bi bi-plus-square"></i>
+                    </Button>
+                )
+        }           
+  }
 
   const removeIngredient = (index) => {
       if(currentRecipe.ingredients.length > 0) {        
@@ -242,6 +267,7 @@ const IngredientList = ({
 
             <Container className="ingBtnContainer">    
               {delBtnVisible(index)} 
+              {addBtnVisible(index)}
                 <Modal
                   show={removeIngModal}
                   onHide={hideRemoveIngModal}

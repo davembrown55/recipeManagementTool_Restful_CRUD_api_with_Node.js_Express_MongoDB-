@@ -67,7 +67,7 @@ const RecipeList = ({ type }) => {
         setActiveRecipe(null, -1, null); // reset currentRecipe 
       }     
     } catch (e) {
-        console.error(e);
+        // console.error(e);
         setRecipes([]);
         setCount(0);
         await verify();
@@ -353,7 +353,25 @@ const RecipeList = ({ type }) => {
                   className='recipeCardTitle'
                 >{currentRecipe.title}</Card.Title>
 
-                <Card.Body className='p-2'>
+                
+
+                  {userName === currentRecipe.username ? 
+                    <Button variant="primary" className="align-self-center mt-3" >
+                      <Link to={`/recipes/${currentRecipe.id}`} className="text-light">
+                        View and Edit
+                      </Link>
+                    </Button>
+                    :
+                    <Button variant="primary" className="align-self-center mt-3" >
+                      <Link to={`/recipes/${currentRecipe.id}`} className="text-light">
+                        View
+                      </Link>
+                    </Button>
+                  } 
+
+                  <Card.Body className='p-2'>
+
+                
                   <Card.Text as="h5" className='mt-3 mb-2'>
                     Description:
                   </Card.Text>
@@ -365,7 +383,8 @@ const RecipeList = ({ type }) => {
                       variant={themeVariants.variant}
                     >{currentRecipe.description}
                     </ListGroup.Item>
-                  </ListGroup>                  
+                  </ListGroup>  
+                                   
                   <Card.Text as="h5" className='mb-2' >
                     Cooking Time:
                   </Card.Text>                  
@@ -412,6 +431,28 @@ const RecipeList = ({ type }) => {
                             <ListGroup.Item action  variant={themeVariants.variant} as="li"   
                             key={index}>
                               • &nbsp; {diet}
+                            </ListGroup.Item>
+                          ))                         
+                        }
+                  </ListGroup>   
+                  <Card.Text as="h5" className='mb-2'>
+                    Meal Type:
+                  </Card.Text> 
+                  <ListGroup as="ul" 
+                    className='mb-3'
+                    variant={themeVariants.variant}  
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                  >                    
+                        {currentRecipe.mealTypes.length === 0 
+                          || typeof currentRecipe.mealTypes === "undefined"  
+                          || (currentRecipe.mealTypes.length === 1 && currentRecipe.mealTypes[0].trim() === "" ) ? 
+                          <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+                            >None
+                          </ListGroup.Item> :
+                          currentRecipe.mealTypes.map((mealType, index) => (    
+                            <ListGroup.Item action  variant={themeVariants.variant} as="li"   
+                            key={index}>
+                              • &nbsp; {mealType}
                             </ListGroup.Item>
                           ))                         
                         }

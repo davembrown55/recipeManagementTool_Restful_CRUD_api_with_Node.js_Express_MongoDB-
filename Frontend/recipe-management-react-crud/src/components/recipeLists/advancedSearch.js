@@ -17,8 +17,9 @@ const AdvancedSearch = ({
     const [cookTimeParam, setCookTimeParam] = useState(false);
     const [ingredientsParam, setIngredientsParam] = useState(false);
     const [dietsParam, setDietsParam] = useState(false);    
+    const [mealTypesParam, setMealTypesParam] = useState(false);    
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchType, setSearchType] = useState("title");    
+    const [searchType, setSearchType] = useState("title");    // Check if this is needed when have time !!!
     const [errors, setErrors] = useState({});    
     const EMPTY_PARAMS = {}; // stable reference. to avoid potential unneccessary re-renders
 
@@ -38,7 +39,8 @@ const AdvancedSearch = ({
             setTitleParam(false);
             setCookTimeParam(false);
             setIngredientsParam(false);
-            setDietsParam(false);            
+            setDietsParam(false);       
+            setMealTypesParam(false);     
         }
     }
 
@@ -169,7 +171,9 @@ const AdvancedSearch = ({
                     >
                         <i className="bi bi-plus-square"></i>
                     </Button>
-                )} 
+                )
+        } 
+        
     }
     
     const delBtnVisible = (index, itemType) => {
@@ -234,11 +238,12 @@ const AdvancedSearch = ({
           const newItemArray = [... currentParamsBeforeSubmit[itemsArray], ""];
           setCurrentParamsBeforeSubmit({ ...currentParamsBeforeSubmit, [itemsArray]: newItemArray});
           //create error for new empty field
-          if(itemsArray !== 'diets') {
+          if(!(itemsArray === 'diets' || itemsArray === 'mealTypes')) {
             const { ...validationErrors } = errors;
             validationErrors[`${itemsArray}Error`] = { [currentParamsBeforeSubmit[itemsArray].length]: 'Field Empty' };
             setErrors(validationErrors);
-          }          
+          }         
+               
         } 
     }
 
@@ -455,6 +460,109 @@ const AdvancedSearch = ({
             </Form.Group>            
     )}}
 
+    const onChangeMealTypes = (index, e) => {
+        const {value, selectedIndex, options} = e.target;
+          const newMealType = value;
+        // Update the diet array    
+        if(options[selectedIndex].index !== 0) {
+          const newMealTypes = currentParamsBeforeSubmit.mealTypes.map((mealType, i) => {
+            return i === index ? newMealType : mealType;
+          });
+          setCurrentParamsBeforeSubmit({ ...currentParamsBeforeSubmit, mealTypes: newMealTypes });
+          let id = `mealTypeSelectIx${index}`;
+          document.getElementById(id).selectedIndex = "0";    
+        }
+    }
+
+    const handleSearchMealTypes = () => {
+        if (mealTypesParam) {
+            delete currentParamsBeforeSubmit.mealTypes;
+            setMealTypesParam(false);
+        } else {            
+            const { ...tempParamObj } = currentParamsBeforeSubmit;            
+            tempParamObj.mealTypes = [""];                        
+            setCurrentParamsBeforeSubmit({ ...tempParamObj});
+            setMealTypesParam(true);
+        }        
+    }
+
+    const showSearchMealTypes = () => {
+        if (mealTypesParam) {        
+            return (
+                <Form.Group controlId="mealTypes" className="mb-2">                                    
+                {currentParamsBeforeSubmit.mealTypes.length > 0 ?
+                    <ListGroup 
+                    as="ul"         
+                    variant={themeVariants.variant} 
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                    >
+                    
+                    {currentParamsBeforeSubmit.mealTypes.map((mealType, index) => (
+                    <ListGroup.Item 
+                        key={index}
+                        variant={themeVariants.variant}
+                        className="d-flex list-item-cont"
+                        >                        
+                        <Form.Group  >
+                            <Form.Control 
+                                type="text"      
+                                value={mealType} 
+                                data-bs-theme={themeVariants['data-bs-theme']}
+                                readOnly
+                                size='sm'
+                                placeholder="Meal Type"
+                            >
+                            </Form.Control>
+                            <Form.Select 
+                                aria-label="Select Meal Type"
+                                id={`mealTypeSelectIx${index}`}
+                                size='sm'
+                                onChange={(e) => onChangeMealTypes(index,  e)}  
+                                autoFocus
+                                >
+                                    <option>Select Meal Type</option>
+                                    <option value="Breakfast">Breakfast</option>
+                                    <option value="Lunch">Lunch</option>
+                                    <option value="Dinner">Dinner</option>
+                                    <option value="Tea">Tea</option>
+                                    <option value="Snack">Snack</option>
+                                    <option value="Sandwich">Sandwich</option>
+                                    <option value="Batch Cook">Batch Cook</option>
+                                    <option value="Drink">Drink</option>
+                                    <option value="Salad">Salad</option>
+                                    <option value="Supper">Supper</option>
+                                    <option value="Elevenses">Elevenses</option>
+                                    <option value="Second Breakfast">Second Breakfast</option>                   
+                            </Form.Select>
+                        </Form.Group> 
+                        <Container className="ingControlContainer d-flex p-0">
+                            <Container className={`arrowContainer d-flex flex-column p-0 ${index === 0 ? 'justify-content-end' : ''}`}>
+                                {addBtnVisible(index, 'mealTypes')}      
+                                {delBtnVisible(index, 'mealTypes')} 
+                            </Container>
+                        </Container>
+                    </ListGroup.Item>                                    
+                    ))}                     
+                </ListGroup>                
+            : 
+                <ListGroup 
+                    as="ul"         
+                    variant={themeVariants.variant} 
+                    data-bs-theme={themeVariants['data-bs-theme']}
+                >
+                <ListGroup.Item 
+                    variant={themeVariants.variant}
+                    className="d-flex justify-content-start list-item-cont">                
+                        <Form.Group  >                 
+                            {addBtnVisible({}, 'mealTypes')} 
+                        </Form.Group>
+                </ListGroup.Item> 
+                </ListGroup>            
+            }                              
+            </Form.Group>            
+    )}}
+
+
     const showSearchFields = () => {
         if (!showAll) {
             return (
@@ -505,6 +613,18 @@ const AdvancedSearch = ({
                 />
                     {showSearchDiets()}
 
+                <Form.Check 
+                    type="switch"
+                    id="mealTypes-on-off"
+                    label="Meal Types"
+                    className="small-text py-2"
+                    // defaultChecked={dietsParam}
+                    checked={mealTypesParam}
+                    onChange={handleSearchMealTypes}
+                    data-bs-theme={themeVariants['data-bs-theme']} 
+                />
+                    {showSearchMealTypes()}
+
         </Container>
     );}}
 
@@ -514,7 +634,8 @@ const AdvancedSearch = ({
         ingredients: handleSearchIngredients,
         diets: handleSearchDietTypes,
         title: handleSearchTitle,
-        cookingTimeMinutes: handleSearchCookTime
+        cookingTimeMinutes: handleSearchCookTime,
+        mealTypesParam: handleSearchMealTypes
     };  
 
     const checkParamsforEmptyOrDuplicateFields = () => {
@@ -579,6 +700,7 @@ const AdvancedSearch = ({
             setCookTimeParam(false);
             setIngredientsParam(false);
             setDietsParam(false);
+            setMealTypesParam(false);
             setErrors({}); // Reset errors  
    
             }
@@ -626,6 +748,10 @@ const AdvancedSearch = ({
                     const dietStr = Object.values(params.diets).join(', ');  
                     buildFeedback[key] = `Diets = '${dietStr}'`;
                     break;
+                case "mealTypes":
+                    const mealTypeStr = Object.values(params.mealTypes).join(', ');  
+                    buildFeedback[key] = `Meal types = '${mealTypeStr}'`;
+                    break;
                 default:
                     break;
             }}
@@ -644,7 +770,9 @@ const AdvancedSearch = ({
 
 
     }, [searchQuery, searchType, searchParams, setSearchParams, setSearchFeedbackString, displaySubmitMessage]);
-        
+
+       
+
     const logParams = () => {        
         console.log(currentParamsBeforeSubmit);        
         console.log(errors);        

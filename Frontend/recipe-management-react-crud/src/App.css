@@ -128,6 +128,13 @@ p {
   
 }
 
+.list-group-numbered > .viewRecipeList.list-group-item.list-group-item::before {
+  content: counters(section, ".") ".";
+  font-size: x-small;
+  padding-right: 0.25rem;
+  
+}
+
 .ing-smaller-btn {
     /* font-size: 0.8rem; */
     font-size: 1rem;
@@ -244,6 +251,10 @@ p {
 
 .passwordInvalid {
   font-size: .875em;
+}
+
+.viewRecipeList {
+  max-width: 750px;
 }
 
 /* #title-on-off {

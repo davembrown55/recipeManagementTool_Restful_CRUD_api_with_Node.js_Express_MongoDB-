@@ -5,8 +5,6 @@ const QuickSearch = ({
     setActiveRecipe,
     displaySubmitMessage,    
     setValFailedClearResults,    
-    // valOrSubmit,
-    // setValOrSubmit,    
     themeVariants,    
     setSearchFeedbackString,    
     searchParams,

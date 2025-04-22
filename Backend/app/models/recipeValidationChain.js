@@ -47,14 +47,23 @@ const recipeValidationChain = (isUpdate = false) => [
     .optional(isUpdate),
 
   body('diets')
-    .optional()
+    .optional(true)
     .isArray().withMessage('Diets must be an array')
     .customSanitizer((diets) => diets.map(diet => sanitizeHtml(diet, {      
       allowedTags: [], 
       allowedAttributes: {} 
     })))
     .custom((diets) => diets.every(diet => typeof diet === 'string'))
-    .withMessage('Each diet must be a string')    ,
+    .withMessage('Each diet must be a string'),
+  body('mealTypes')
+    .optional(true)
+    .isArray().withMessage('MealTypes must be an array')
+    .customSanitizer((mealTypes) => mealTypes.map(mealType => sanitizeHtml(mealType, {      
+      allowedTags: [], 
+      allowedAttributes: {} 
+    })))
+    .custom((mealTypes) => mealTypes.every(mealType => typeof mealType === 'string'))
+    .withMessage('Each mealType must be a string'),
 
   body('published')
     .isBoolean().withMessage('Published must be true or false')

@@ -8,12 +8,9 @@ import UserRegister from "./userRegister.component";
 
 const UserLogin = () => {
     
-    const { themeVariants } = useTheme(); 
-    // if(!!theme) {setTheme(theme)};
-    // console.log(theme);
+    const { themeVariants } = useTheme();   
     const navigate = useNavigate();
     const location = useLocation();
-
     // const [activeTab, setActiveTab] = useState("ExistingUser");
     // Determine active tab based on URL
     const activeTab = location.pathname.includes("existingUser") ? "ExistingUser" : "UserRegister";

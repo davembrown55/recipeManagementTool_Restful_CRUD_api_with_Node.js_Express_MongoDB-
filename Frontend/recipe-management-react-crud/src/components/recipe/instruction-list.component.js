@@ -58,13 +58,38 @@ const InstructionList = ({
     if(index > 0){
       return(
         <Button   
-        variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
+        variant='outline-danger' 
         className="ing-smaller-btn border-0"                
         onClick={(e) => showRemoveInstModal(index)}
         > 
           <i className="bi bi-trash"></i>
         </Button>
   )}}
+
+  const addBtnVisible = (index) => {
+            if (currentRecipe.instructions.length === 0 ) {
+                return (
+                    <Button 
+                    variant='outline-success'
+                    className="ing-smaller-btn border-0" 
+                    onClick={(e) => addInstruction()}
+                    >
+                        <i className="bi bi-plus-square"></i>
+                    </Button>
+                )      
+            } else if (currentRecipe.instructions[index].trim().length > 0 
+                        && index === currentRecipe.instructions.length -1) {
+                    return (
+                        <Button 
+                        variant='outline-success'
+                        className="ing-smaller-btn border-0" 
+                        onClick={(e) => addInstruction()}
+                        >
+                            <i className="bi bi-plus-square"></i>
+                        </Button>
+                    )
+            }           
+  }
   
   const removeInstruction = (index) => {
     if(currentRecipe.instructions.length > 0) {
@@ -243,6 +268,7 @@ const InstructionList = ({
 
           <Container className="ingBtnContainer">          
             {delBtnVisible(index)}
+            {addBtnVisible(index)} 
               <Modal
                   show={removeInstModal}
                   onHide={hideRemoveInstModal}

@@ -55,13 +55,38 @@ const DietsList = ({
     // if(index > 0){
       return (
         <Button   
-        variant={themeVariants.variant === 'dark' ? "outline-danger" : "danger"} 
+        variant='outline-danger'
         className="ing-smaller-btn border-0"  
         onClick={(e) => showRemoveDietModal(index)}
         > 
           <i className="bi bi-trash"></i>
         </Button>
   )}
+
+  const addBtnVisible = (index) => {
+      if (currentRecipe.diets.length === 0 ) {
+          return (
+              <Button 
+              variant='outline-success'
+              className="ing-smaller-btn border-0" 
+              onClick={(e) => addDiet()}
+              >
+                  <i className="bi bi-plus-square"></i>
+              </Button>
+          )      
+      } else if (currentRecipe.diets[index].trim().length > 0 
+                  && index === currentRecipe.diets.length -1) {
+              return (
+                  <Button 
+                  variant='outline-success'
+                  className="ing-smaller-btn border-0" 
+                  onClick={(e) => addDiet()}
+                  >
+                      <i className="bi bi-plus-square"></i>
+                  </Button>
+              )
+      }           
+  }
 
   const removeDiet = (index) => {
     if(currentRecipe.diets.length > 0) {
@@ -227,6 +252,7 @@ const DietsList = ({
 
           <Container className="ingBtnContainer">          
             {delBtnVisible(index)}
+            {addBtnVisible(index)} 
               <Modal
                   show={removeDietModal}
                   onHide={hideRemoveDietModal}

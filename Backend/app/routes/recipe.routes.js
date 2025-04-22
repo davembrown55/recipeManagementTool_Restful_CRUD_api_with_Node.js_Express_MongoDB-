@@ -80,7 +80,7 @@ const verifyUserAdminOrNot = async (req, res, next) => {
   }
 };
 
-const verifyAdminOrUserWithSesssion  = async (req, res, next) => { 
+const verifyAdminOrUserWithSesssion = async (req, res, next) => { 
   if ( req.session && req.session.userId && 
     req.session.userRole === 'admin') {
     try {
@@ -103,6 +103,31 @@ const verifyAdminOrUserWithSesssion  = async (req, res, next) => {
       res.status(401).send('Unauthorized.');
   } 
 }
+
+const verifyUserRole = async (req, res, next) => {
+  if ( req.session && req.session.userId && 
+    req.session.userRole === 'admin') {
+    try {
+        const id = req.session.userId;
+        const findAdmin = await User.findById(id, 'isAdmin');            
+        if (findAdmin.isAdmin) {
+            // Attach the user role to the request object
+            req.authdRole = req.session.userRole;
+            next();
+        } else {
+            throw new Error('Unable to verify admin credentials');
+        }            
+    } catch (e) {        
+        res.status(400).send('Unable to verify admin credentials');
+    } 
+  } else if (req.session && req.session.userId) {
+      req.authdRole = req.session.userRole;
+      next();
+  } else {
+      req.authdRole = 'none';
+      next();
+  } 
+};
 
 const verifyCorrectUser = async (req, res, next) => {
   const recipeId = req.params.id;
@@ -232,6 +257,17 @@ router.post("/advancedSearch",
         .custom((diets) => diets.every(diet => typeof diet === 'string'))
         .withMessage('Each diet type must be a string')
         .optional(),
+    check('mealTypes')        
+        .isArray().withMessage('meal types must be an array')
+        .customSanitizer((mealTypes) => mealTypes.filter((mealType) => mealType.trim().length > 0))
+        .isArray({ min: 1 }).withMessage('meal types array was empty')
+        .customSanitizer((mealTypes) => mealTypes.map(mealType => sanitizeHtml(mealType, {      
+          allowedTags: [], 
+          allowedAttributes: {} 
+        })))
+        .custom((mealTypes) => mealTypes.every(mealType => typeof mealType === 'string'))
+        .withMessage('Each meal type type must be a string')
+        .optional(),
     check('page')
       .isInt({ min: 0 }).withMessage('Page must be a number'),   
     check('size')
@@ -269,9 +305,32 @@ router.post("/advancedSearch",
   
 
 
+// !!! Needs updating add auth / validation / async await etc !!!
+
+//      if recipe published and user not recipe owner:
+//          => render read view only
+//      if user is recipe owner 
+//          => render read / update views 
+//      if user is admin 
+//          => render read / update views 
+
+// Need user role: 'none', 'user', 'admin'
 
 // Retrieve a single Recipe with id
-router.get("/:id", recipes.findOne);
+router.get("/:id",
+  verifyUserRole,
+  [
+    check('id').trim().notEmpty().isMongoId().withMessage('Invalid recipe ID format')
+  ],  
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())  {
+      return res.status(400).json({ errors: errors.array()});
+    }  
+    await recipes.findOne(req, res);
+  } 
+);
+
 
 // Update a Recipe with id.
 router.patch("/:id", 

@@ -14,9 +14,11 @@ import { useTheme} from '../../common/ThemeProvider';
 import IngredientList from "./ingredient-list.addR.component";
 import InstructionList from "./instruction-list.addR.component";
 import DietsList from "./diet-list.addR.component";
+import MealTypeList from "./mealType-list.addR.component";
+import { useAuth } from "../../auth/AuthContext";
 
 const AddRecipe = () => {
-
+const { userRole, userName, verify } = useAuth();
 const [currentRecipe, setCurrentRecipe] = useState({
     id: null,
     title: "",
@@ -25,11 +27,12 @@ const [currentRecipe, setCurrentRecipe] = useState({
     cookingTimeMinutes: 0,
     ingredients: [""],
     instructions: [""], 
-    diets: [""]
+    diets: [""], 
+    mealTypes: [""]
 });
 
 const {create} = useRecipeService();
-
+const [unauthorisedModal, setUnauthorisedModal] = useState(false);
 const [published, setPublished] = useState(false);
 const [submitted, setSubmitted] = useState(false);
 const [errors, setErrors] = useState({
@@ -40,7 +43,11 @@ const [errors, setErrors] = useState({
 }); 
 const navigate = useNavigate();
 
-
+const hideUnauthorisedModal = () => {  
+  setUnauthorisedModal(false);   
+    verify(); 
+    navigate('/Recipes');
+}
 
 useEffect(() => {       
     const {recipeEmpty, noInstructions, noIngredients,  ...validationErrors} = errors;
@@ -81,7 +88,8 @@ const resetRecipe = () => {
         cookingTimeMinutes: 0,
         ingredients: [""],
         instructions: [""], 
-        diets: [""]
+        diets: [""], 
+        mealTypes: [""]
     });
     
 }
@@ -147,12 +155,20 @@ const saveRecipe = async () => {
   try{
     // dont include diets if empty
     const data = checkDietsForEmptyFields();
-    const response = await create(data);
+    const response = await create(data);    
     setSubmitted(true);
     resetRecipe();
-    console.log(response);
   } catch (e) {
-    console.error(e);
+    if(e.response.status === 401 ) {
+      setUnauthorisedModal(true);
+    } else {
+      verify();
+    }
+    
+    // else {
+    //   verify();
+    //   navigate('/Recipes');
+    // }
   }
 
 }
@@ -236,6 +252,7 @@ const btnDisabledTxt = () => {
 
 return (
 <Container className="d-flex justify-content-center">
+
     {submitted ? (
         <Modal
         show={submitted}
@@ -261,7 +278,27 @@ return (
     ) : (
         
         <Col xs={12} md={10} lg={8} className="d-flex justify-content-center">
-
+          <Modal
+              show={unauthorisedModal}
+              onHide={hideUnauthorisedModal}
+              backdrop="static"
+              keyboard={false}
+              data-bs-theme={themeVariants['data-bs-theme']}       
+              className={themeVariants.variant}
+              centered
+          >
+              <Modal.Header  closeButton >
+              <Modal.Title >Unauthorised</Modal.Title>
+              </Modal.Header>
+              <Modal.Body >
+                Access Denied!
+              </Modal.Body>
+              <Modal.Footer>
+              <Button variant="secondary" onClick={hideUnauthorisedModal}>
+                  Close
+              </Button>    
+              </Modal.Footer>
+            </Modal>  
         <Card 
             bg={themeVariants.variant === 'dark'  &&  'dark'} 
             key={themeVariants.variant}
@@ -343,6 +380,13 @@ return (
                     diets={currentRecipe.diets}
                     themeVariants={themeVariants}
                     errors={errors}
+                  />
+                
+                <MealTypeList 
+                    currentRecipe={currentRecipe}
+                    setCurrentRecipe={setCurrentRecipe}
+                    mealTypes={currentRecipe.mealTypes}
+                    themeVariants={themeVariants}
                   />
 
                 <Form.Group className="mb-5">
