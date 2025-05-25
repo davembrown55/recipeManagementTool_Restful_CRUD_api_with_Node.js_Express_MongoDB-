@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-// import RecipeDataService from "../../services/old.recipe.service";
 import useRecipeService from "../../services/recipe.service";
 import {useNavigate} from 'react-router-dom';
-
 import Modal from 'react-bootstrap/Modal';
 import {Container, ListGroup} from 'react-bootstrap';
 import Row from 'react-bootstrap/Row';
@@ -33,6 +31,8 @@ const [currentRecipe, setCurrentRecipe] = useState({
 
 const {create} = useRecipeService();
 const [unauthorisedModal, setUnauthorisedModal] = useState(false);
+const [serverCallErrorMessage, setServerCallErrorMessage] = useState(null);
+const [serverCallError, setServerCallError] = useState(false);
 const [published, setPublished] = useState(false);
 const [submitted, setSubmitted] = useState(false);
 const [errors, setErrors] = useState({
@@ -43,10 +43,15 @@ const [errors, setErrors] = useState({
 }); 
 const navigate = useNavigate();
 
-const hideUnauthorisedModal = () => {  
-  setUnauthorisedModal(false);   
-    verify(); 
-    navigate('/Recipes');
+const hideUnauthorisedModal = () => {      
+    setUnauthorisedModal(false);  
+    if (typeof serverCallErrorMessage.status !== 'undefined' 
+        && serverCallErrorMessage.status === 401) {
+          verify(); 
+          navigate('/Recipes');
+        }    
+    setServerCallErrorMessage(null);
+    setServerCallError(false);
 }
 
 useEffect(() => {       
@@ -103,7 +108,6 @@ const goToRecipeList = () => {
     navigate('/Recipes');
 }
 
-//   const onChangeTitle = (e) => setTitle(e.target.value);
 const onChangeTitle = (e) => {
     const title = e.target.value;
     setCurrentRecipe({ ...currentRecipe, title });
@@ -115,7 +119,6 @@ const onChangeTitle = (e) => {
     setErrors(validationErrors);    
 };
 
-//   const onChangeDescription = (e) => setDescription(e.target.value);
 const onChangeDescription = (e) => {
     const description = e.target.value;    
     setCurrentRecipe({ ...currentRecipe, description });
@@ -127,7 +130,6 @@ const onChangeDescription = (e) => {
     setErrors(validationErrors);
 };
 
-//   const onChangeCookingTimeMinutes = (e) => {setCookingTimeMinutes(Number(e.target.value));};
 const onChangeCookingTimeMinutes = (e) => {  
     const cookingTimeMinutes = parseInt(e.target.value, 10) || 0;
 
@@ -143,9 +145,10 @@ const onChangeCookingTimeMinutes = (e) => {
     setErrors(validationErrors);
 };
 
-const checkDietsForEmptyFields = () => {
+const checkArraysForEmptyFields = () => {
   const newDietArray = currentRecipe.diets.filter((diet, i) => diet.trim() !== "" );
-  const updatedRecipe = {...currentRecipe, diets:newDietArray};
+  const newMealTypeArray = currentRecipe.mealTypes.filter((mt, i) => mt.trim() !== "" );
+  const updatedRecipe = {...currentRecipe, diets:newDietArray, mealTypes:newMealTypeArray};
     return updatedRecipe;
 
 }
@@ -154,42 +157,58 @@ const checkDietsForEmptyFields = () => {
 const saveRecipe = async () => {  
   try{
     // dont include diets if empty
-    const data = checkDietsForEmptyFields();
+    const data = checkArraysForEmptyFields();
     const response = await create(data);    
     setSubmitted(true);
     resetRecipe();
   } catch (e) {
-    if(e.response.status === 401 ) {
+    // if(e.response.status === 401 ) {
+    //   setUnauthorisedModal(true);
+    // } else {
+    //   verify();
+    // }
+    //
+    if(typeof e.response.status !== 'undefined' && [ 400, 401, 404, 500 ].find((i) => i === e.response.status)) {
+      
+      let status = e.response.status;
+      if (status === 400 && typeof e.response.data.errors !== 'undefined') {
+          // Validation errors
+          // turn  [{ msg: 'foo' }, { msg: 'bar' }]  into  [ <p>foo</p>, <p>bar</p> ]
+          const errorMessage = e.response.data.errors.map((e, i) => (
+            <p key={i}>Error in {e.path} field: {e.msg}</p>
+        )); 
+        setServerCallErrorMessage({
+          status: status,
+          msg: errorMessage
+        });
+      } else if (status === 401) {
+        setServerCallErrorMessage({
+          status: status,
+          msg: e.response.data.msg || `Not authorised to add recipe: ${currentRecipe.title}`
+        });
+      } else if (status === 404) {
+        setServerCallErrorMessage({
+          status: status,
+          msg: e.response.data.msg || `404: Not found`
+        });
+      } else {              
+        setServerCallErrorMessage({
+          status: status,
+          msg: e.response.data.msg || `failed to add ${currentRecipe.title}`
+        });
+      }
       setUnauthorisedModal(true);
+      setServerCallError(true);
     } else {
       verify();
     }
-    
-    // else {
-    //   verify();
-    //   navigate('/Recipes');
-    // }
+    //
+
+
   }
-
 }
-// const saveRecipe = () => {
-//     // dont include diets if empty
-//     const data = checkDietsForEmptyFields();
-//     // const data = currentRecipe;
-
-//     RecipeDataService.create(data)
-//         .then((response) => {
-//         setSubmitted(true);
-//         resetRecipe();
-//         console.log(response.data);
-//         })
-//         .catch((e) => {
-//         console.log(e);
-//         });
-// };
 
 const { themeVariants } = useTheme(); 
-
 
 const btnDisabledTxt = () => {
     if (Object.keys(errors).length === 0){}
@@ -288,10 +307,10 @@ return (
               centered
           >
               <Modal.Header  closeButton >
-              <Modal.Title >Unauthorised</Modal.Title>
+              <Modal.Title >{serverCallError && typeof serverCallErrorMessage.status !== 'undefined' && serverCallErrorMessage.status === 401 ? 'Unauthorised' : 'Error'}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
-                Access Denied!
+                {(serverCallError && typeof serverCallErrorMessage.msg !== 'undefined') && serverCallErrorMessage.msg } {/*Access Denied*/}
               </Modal.Body>
               <Modal.Footer>
               <Button variant="secondary" onClick={hideUnauthorisedModal}>

@@ -59,7 +59,7 @@ const UpdateRecipe = ({ currentRecipe,
           if (submitMessage.length > 0) {
             submitMessage[0].style.visibility = "visible";
             submitMessage[0].style.opacity = "1";
-            submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 700ms"; 
+            submitMessage[0].style.transition = "visibility 0s linear 0s, opacity 1000ms"; // 700 
     
             const timerFadeOut = setTimeout(() => {
               if (submitMessage.length > 0) { 
@@ -71,7 +71,7 @@ const UpdateRecipe = ({ currentRecipe,
     
             const timer = setTimeout(() => {
               setMessage("");
-            }, 3000);
+            }, 8000);
     
             return () => {
               clearTimeout(timer);
@@ -131,22 +131,61 @@ const UpdateRecipe = ({ currentRecipe,
     
          setCurrentRecipe({ ...currentRecipe, published: status });
          setPrevRecipeOnDB({ ...currentRecipe, published: status });
-        //  console.log(response);
          setMessage("The Recipe was updated successfully!")
     
         } catch (e) {
           setServerCallError(true);
           setUpdateRecipeModal(true);
-          if (e.response.status === 401) {                  
-            setServerCallErrorMessage(`Not authorised to update: ${currentRecipe.title}`);
-          } else if (typeof(e.response.data.errors) !== 'undefined') {
-            const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
-            setServerCallErrorMessage(`Error: ${Msg}`);
-          } else if (e.response.status === 404) {
-            setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
-          } else {
-            setServerCallErrorMessage(`failed to update ${currentRecipe.title}`);
-          }     
+
+          if(typeof e.response.status !== 'undefined' && [ 400, 401, 404, 500 ].find((i) => i === e.response.status)) {
+            let status = e.response.status;
+            if (status === 400 && typeof e.response.data.errors !== 'undefined') {
+                // Validation errors
+                // turn  [{ msg: 'foo' }, { msg: 'bar' }]  into  [ <p>foo</p>, <p>bar</p> ]
+                const errorMessage = e.response.data.errors.map((e, i) => (
+                  <p key={i}>Error in {e.path} field: {e.msg}</p>
+              )); 
+              setServerCallErrorMessage({
+                status: status,
+                msg: errorMessage
+              });
+            } else if (status === 401) {
+              setServerCallErrorMessage({
+                status: status,
+                msg: `Not authorised to update: ${currentRecipe.title}`
+              });
+            } else if (status === 404) {
+              setServerCallErrorMessage({
+                status: status,
+                msg: `Recipe: ${currentRecipe.title} wasnt found in database`
+              });
+            } else {              
+              setServerCallErrorMessage({
+                status: status,
+                msg: e.response.data.msg || `failed to update ${currentRecipe.title}`
+              });
+            }
+          }
+
+          // if (e.response.status === 401) {                  
+          //   setServerCallErrorMessage({
+          //     status:401,
+          //     msg: `Not authorised to update: ${currentRecipe.title}`
+          //   });
+          // } else if (typeof(e.response.data.errors) !== 'undefined') {
+          //   const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
+          //   setServerCallErrorMessage({
+          //     status:400,
+          //     msg:`Error: ${Msg}`
+          //   });
+          // } else if (e.response.status === 404) {
+          //   setServerCallErrorMessage({
+          //     status:404,
+          //     msg: `Recipe: ${currentRecipe.title}, wasnt found in database`
+          //   });
+          // } else {
+          //   setServerCallErrorMessage(`failed to update ${currentRecipe.title}`);
+          // }     
         }
     };
 
@@ -175,7 +214,8 @@ const UpdateRecipe = ({ currentRecipe,
         setUpdateRecipeModal(true); 
       } 
     const hideUpdateRecipeModal = () => { 
-        if (serverCallError) {
+        if (serverCallError && typeof serverCallErrorMessage.status !== 'undefined' 
+            && serverCallErrorMessage.status === 401) {
           verify();
           navigate('/Recipes');
         } 
@@ -193,8 +233,9 @@ const UpdateRecipe = ({ currentRecipe,
         try{
           const recipeData = checkDietsForEmptyFields();
           const response = await update(currentRecipe.id, recipeData);
-          hideUpdateRecipeModal();          
-          setMessage("The Recipe was updated successfully!");
+          // hideUpdateRecipeModal();          
+
+          // setMessage("The Recipe was updated successfully!");
           setMessage(response.msg);
           setPrevRecipeOnDB({...currentRecipe}); // update prevRecipeOnDB for next comparison    
           const {...recipe} = response.updatedRecipeData;
@@ -214,18 +255,56 @@ const UpdateRecipe = ({ currentRecipe,
         } catch (e) {
           // console.error(e);
           setServerCallError(true);      
-          if (e.response.status === 401) {        
-            setServerCallErrorMessage(`Not authorised to update: ${currentRecipe.title}`);
-          } else if (typeof(e.response.data.errors) !== 'undefined') {
-            const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
-            setServerCallErrorMessage(`Error: ${Msg}`);
-          } else if (e.response.status === 400) {
-            setServerCallErrorMessage(`No valid fields to update`);
-          } else if (e.response.status === 404) {
-            setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
-          } else {
-            setServerCallErrorMessage(`failed to update ${currentRecipe.title}`);
-          }     
+
+          if(typeof e.response.status !== 'undefined' && [ 400, 401, 404, 500 ].find((i) => i === e.response.status)) {
+            let status = e.response.status;
+            if (status === 400 ) {
+              if(typeof e.response.data.errors !== 'undefined') {
+                  // Validation errors
+                  // turn  [{ msg: 'foo' }, { msg: 'bar' }]  into  [ <p>foo</p>, <p>bar</p> ]
+                  const errorMessage = e.response.data.errors.map((e, i) => (
+                    <p key={i}>Error in {e.path} field: {e.msg}</p> 
+                  )); 
+                  setServerCallErrorMessage({
+                    status: status,
+                    msg: errorMessage
+                  });
+                } else {
+                  setServerCallErrorMessage({
+                    status: status,
+                    msg: e.response.data.msg || `No valid fields to update`
+                  });
+                }                
+            } else if (status === 401) {
+              setServerCallErrorMessage({
+                status: status,
+                msg: `Not authorised to update: ${currentRecipe.title}`
+              });
+            } else if (status === 404) {
+              setServerCallErrorMessage({
+                status: status,
+                msg: `Recipe: ${currentRecipe.title} wasnt found in database`
+              });
+            } else {              
+              setServerCallErrorMessage({
+                status: status,
+                msg: e.response.data.msg || `failed to update ${currentRecipe.title}`
+              });
+            }
+          }
+
+          // if (e.response.status === 401) {        
+          //   setServerCallErrorMessage(`Not authorised to update: ${currentRecipe.title}`);
+          // } else if (typeof(e.response.data.errors) !== 'undefined') {
+          //   const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
+          //   setServerCallErrorMessage(`Error: ${Msg}`);
+          // } else if (e.response.status === 400) {
+          //   setServerCallErrorMessage(`No valid fields to update`);
+          // } else if (e.response.status === 404) {
+          //   setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
+          // } else {
+          //   setServerCallErrorMessage(`failed to update ${currentRecipe.title}`);
+          // }     
         }    
     }
 
@@ -233,10 +312,12 @@ const UpdateRecipe = ({ currentRecipe,
         if (noChangesToRecipe) {
           return `No changes to update!`;
         } else if (serverCallError) {
-          return `${serverCallErrorMessage}`;
+          return serverCallErrorMessage.msg;
         } else if (updateRecipeModal === false) {
           return null;
-        } else {
+        } else if (message) {
+          return message;
+        }else {
           return `Are you sure you want to update: ${currentRecipe.title}?`;
         }  
     }
@@ -245,17 +326,55 @@ const UpdateRecipe = ({ currentRecipe,
             await remove(currentRecipe.id);
             setServerCallSuccess(true);
         } catch (e) {
-            setServerCallError(true);      
-            if (e.response.status === 401) {        
-                setServerCallErrorMessage(`Not authorised to delete: ${currentRecipe.title}`);
-            } else if (typeof(e.response.data.errors) !== 'undefined') {
-            const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
-                setServerCallErrorMessage(`Error: ${Msg}`);
-            } else if (e.response.status === 404) {
-                setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
-            } else {
-                setServerCallErrorMessage(`failed to delete ${currentRecipe.title}`);
-            }      
+            setServerCallError(true);   
+            
+            if(typeof e.response.status !== 'undefined' && [ 400, 401, 404, 500 ].find((i) => i === e.response.status)) {
+              let status = e.response.status;
+              if (status === 400 ) {
+                if(typeof e.response.data.errors !== 'undefined') {
+                    // Validation errors
+                    // turn  [{ msg: 'foo' }, { msg: 'bar' }]  into  [ <p>foo</p>, <p>bar</p> ]
+                    const errorMessage = e.response.data.errors.map((e, i) => (
+                      <p key={i}>Error in {e.path} field: {e.msg}</p>
+                    )); 
+                    setServerCallErrorMessage({
+                      status: status,
+                      msg: errorMessage
+                    });
+                  } else {
+                    setServerCallErrorMessage({
+                      status: status,
+                      msg: e.response.data.msg || `Bad Request`
+                    });
+                  }                
+              } else if (status === 401) {
+                setServerCallErrorMessage({
+                  status: status,
+                  msg: `Not authorised to delete: ${currentRecipe.title}`
+                });
+              } else if (status === 404) {
+                setServerCallErrorMessage({
+                  status: status,
+                  msg: `Recipe: ${currentRecipe.title} wasnt found in database`
+                });
+              } else {              
+                setServerCallErrorMessage({
+                  status: status,
+                  msg: e.response.data.msg || `failed to delete ${currentRecipe.title}`
+                });
+              }
+            }
+            
+            // if (e.response.status === 401) {        
+            //     setServerCallErrorMessage(`Not authorised to delete: ${currentRecipe.title}`);
+            // } else if (typeof(e.response.data.errors) !== 'undefined') {
+            // const Msg = e.response.data.errors.map((x) => {return x.msg}).join(', '); 
+            //     setServerCallErrorMessage(`Error: ${Msg}`);
+            // } else if (e.response.status === 404) {
+            //     setServerCallErrorMessage(`Recipe: ${currentRecipe.title}, wasnt found in database`);
+            // } else {
+            //     setServerCallErrorMessage(`failed to delete ${currentRecipe.title}`);
+            // }      
         }
     }
 
@@ -288,7 +407,7 @@ const UpdateRecipe = ({ currentRecipe,
 
     const deleteRecipeModalBodyContent = () => {
         if (serverCallError) {
-          return `${serverCallErrorMessage}`;
+          return serverCallErrorMessage.msg;
         } else if (serverCallSuccess) {
           return `Successfully deleted: ${currentRecipe.title}.`;
         } else if (deleteRecipeModal === false) {
@@ -490,7 +609,7 @@ const UpdateRecipe = ({ currentRecipe,
                             centered
                         >
                             <Modal.Header  closeButton >
-                            <Modal.Title >Delete Recipe</Modal.Title>
+                            <Modal.Title >{serverCallError ?  'Error Deleting Recipe' : 'Delete Recipe'}</Modal.Title>
                             </Modal.Header>
                             <Modal.Body >
                             {deleteRecipeModalBodyContent()}
@@ -521,7 +640,7 @@ const UpdateRecipe = ({ currentRecipe,
                             centered
                         >
                             <Modal.Header  closeButton >
-                            <Modal.Title >Update Recipe</Modal.Title>
+                            <Modal.Title >{serverCallError ?  'Error Updating Recipe' : 'Update Recipe'}</Modal.Title>
                             </Modal.Header>
                             <Modal.Body >
                             {updateRecipeModalBodyContent()}
@@ -534,7 +653,7 @@ const UpdateRecipe = ({ currentRecipe,
                                 onClick={hideUpdateRecipeModal}>
                                 Close
                             </Button>
-                            {noChangesToRecipe === true || serverCallError == true ? null : <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button> }
+                            {noChangesToRecipe === true || message || serverCallError == true ? null : <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button> }
                             {/* {!noChangesToRecipe &&
                             <Button variant="primary" onClick={(e) => updateRecipe()}>Yes</Button>} */}
                             </Modal.Footer>
@@ -543,7 +662,7 @@ const UpdateRecipe = ({ currentRecipe,
                         </Row>   
                         <Container className="updateMessages"> 
                         <Row className="mt-3 btnDisableTxt">{btnDisabledTxt()}</Row> 
-                        <Row className="mt-3  rcpMessageTxt">{<p>{message}</p>}</Row> 
+                        <Row className="mt-3  rcpMessageTxt" style={{color: '#198754'}}>{<p>{message}</p>}</Row> 
                         </Container> 
                     </Card.Body>
 

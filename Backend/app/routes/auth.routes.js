@@ -5,8 +5,8 @@ const { body, check, validationResult } = require('express-validator');
 // const { unescape } = require('lodash');
 const he = require('he');
 const User = require('../models/user.model');
-
 const router = express.Router();
+const ObjectId = require('mongoose').Types.ObjectId;
 
 // Register route
 router.post('/register', [
@@ -16,10 +16,7 @@ router.post('/register', [
                                                           minLowercase: 1, 
                                                           minSymbols: 1
                                                         }).withMessage('Invalid password'),
-    check('username').trim().escape()
-    // check('password').trim().notEmpty().isLength({ min: 6 })
-    // Use on login route too: especially normalizeEmail
-
+    check('username').trim().isLength({ min: 3, max: 20 }).withMessage('Username must be between 3 & 20 characters long').escape()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {return res.status(400).json({ errors: errors.array() });}
@@ -35,8 +32,7 @@ router.post('/register', [
         await user.save();
         res.send('User Registered');
         // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        // res.json({ token });
-        
+        // res.json({ token });        
     } catch (err) {        
         res.status(500).json({ Error: err, msg: 'Server Error' });
     }
@@ -69,7 +65,6 @@ router.post('/login', [
         req.session.userRole = role;
         req.session.username = user.username;
         req.session.email = user.email;
-
 
         const data = {username: he.decode(req.session.username), role: req.session.userRole};
         res.json({ message: 'Login successful', user: data});
@@ -135,7 +130,7 @@ router.post('/user/checkEmail', [
 });
 //Check if username exists
 router.post('/user/checkUsername',  [    
-    check('username').trim().escape()
+    check('username').trim().isLength({ min: 3, max: 20 }).withMessage('Username must be between 3 & 20 characters long').escape()
 ],  async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {return res.status(400).json({ errors: errors.array() });}
@@ -155,11 +150,11 @@ router.post('/user/checkUsername',  [
 });
 
 // verify with session
-const verifySession = (req, res, next) => {
+const verifySession = (req, res, next) => {    
     if (req.session && req.session.userId) {
       next();
     } else {
-      res.status(401).send('Unauthorised. No log-in session detected');
+      return res.status(401).send({msg: 'Unauthorised. No log-in session detected'});
     }
   };
   
@@ -167,8 +162,6 @@ router.get('/secure-data', verifySession, (req, res) => {
     const user = { username: he.decode(req.session.username), 
                    role:  req.session.userRole
                  }
-
-                 
     res.send({sessionVerified: user});
 }); 
 
@@ -184,7 +177,7 @@ const verifyToken = (req, res, next) => {
       req.user = verified; // Attach the decoded user info to req.user
       next();
     } catch (err) {
-      res.status(400).send('Invalid token.');
+      return res.status(400).send('Invalid token.');
     }
   };
 //
@@ -198,10 +191,12 @@ const verifyToken = (req, res, next) => {
 // };
   
 router.get('/user-info', verifySession, (req, res) => {    
-const user = { username: he.decode(req.session.username), 
+const user = { 
+                username: he.decode(req.session.username), 
                 role:  req.session.userRole, 
-                email: req.session.email
-  }
+                email: req.session.email,
+                id: req.session.userId
+            }    
 res.send({sessionVerified: user});
 });
 
@@ -278,18 +273,20 @@ router.post('/user/id',
 
 });
 
-const updateUser = async (updateBody, id, role, res) => {
-
-    const { username, email, password } = updateBody;
+const updateUser = async (updateBody, id, role, res, req) => {      
+    const { username, email, password, updatedPassword } = updateBody;
 
     if (updateBody.hasOwnProperty('password')) {
         delete updateBody[password];
+    }
+    if (updateBody.hasOwnProperty('updatedPassword')) {
+        delete updateBody[updatedPassword];
     }
 
      // username and email are unique. Perform check to ensure they arnt in db already
      const existingUserNameOrPass = await User.findOne({
         $and: [
-          { _id: { $ne: id } },
+          { _id: { $ne: new ObjectId(id) } },
           { $or: [{ username }, { email }] }
         ]
     });
@@ -307,10 +304,15 @@ const updateUser = async (updateBody, id, role, res) => {
         if (Object.keys(updateBody).length === 0) { 
             return res.status(400).send({ msg: "No valid fields provided for update."})};
 
-        const existingUser = await User.findById(id);
+        const existingUser = await User.findById(new ObjectId(id));
+
         if (!existingUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+            return res.status(404).send({ msg: 'User not found' });;
+        } 
+        // else {
+        //     console.log(JSON.stringify(existingUser, 2, 2));
+        //     return res.send({ msg: existingUser});
+        // } 
 
         const duplicates = {};
         // check for duplicate fields. No need to update these.
@@ -322,7 +324,11 @@ const updateUser = async (updateBody, id, role, res) => {
 
         // If all requested fields are duplicates.
         if (Object.keys(duplicates).length === Object.keys(updateBody).length) {
-            return res.status(400).send({ msg: `No changes found in ${Object.keys(duplicates).join(", ")} fields.` });
+            if(Object.keys(duplicates).length > 1) { 
+                return res.status(400).send({ msg: `No changes found in ${Object.keys(duplicates).join(", ")} fields.` });
+            } else {
+                return res.status(400).send({ msg: `No changes found in ${Object.keys(duplicates).join(", ")} field.` });
+            }                    
         }
         // Remove duplicate fields from `updateBody` and check id empty again.
         Object.keys(duplicates).forEach((key) => {
@@ -332,10 +338,15 @@ const updateUser = async (updateBody, id, role, res) => {
             return res.status(400).send({ msg: `No changes to update.` });
         }
 
-        if (password && role === 'user') {
+        if (password && updatedPassword && role === 'user' ) {
+            if(password === updatedPassword) {
+                return res.status(400).send({ msg: `new password is the same as the current password.` });
+            }
+            // Check old password for match with password in db
             const isMatch = await bcrypt.compare(password, existingUser.password);
-            if(!isMatch) {
-                const hashedPassword = await bcrypt.hash(password, 10);
+            
+            if(isMatch) {                
+                const hashedPassword = await bcrypt.hash(updatedPassword, 10);
                 updateBody.password = hashedPassword;
             } else {
                 return res.status(400).send({ msg: `Password update failed.` });
@@ -343,19 +354,38 @@ const updateUser = async (updateBody, id, role, res) => {
         }
 
         const updatedUser = await User.findByIdAndUpdate(id, updateBody, { new: true, useFindAndModify: false });
+        
+        // Add something to update the session data if that info has been updated and type === user,
+
+        // && (role === 'user' || ( role === 'admin' && id === updatedUser._id.toString() ))
+        let returnUserInfo = undefined;
+        if(updatedUser && role === 'user') {
+            if (updateBody.hasOwnProperty('username')) {
+                req.session.username = updatedUser.username;        
+            }
+            if (updateBody.hasOwnProperty('email')) {
+                req.session.email = updatedUser.email;      
+            }
+            const { password, __v, _id, username, ...rest } = updatedUser.toObject();
+            if(_id) {  rest.id = _id; };
+            if(username) {  rest.username = he.decode(username); };
+            returnUserInfo = rest;
+        }
+
         if (!updatedUser) {
-            res.status(404).send({
+            return res.status(404).send({
                 msg: `Cannot update user with id=${id}.`
             });
         } else if (Object.keys(duplicates).length > 0) {
-            res.send({ msg: 
-                `User was updated. No changes found in ${Object.keys(duplicates).join(", ")} \
-                 ${(Object.keys(duplicates).length > 1) ? ' fields' : ' field.'}.` } );
+            return res.json({ msg: 
+                `User was updated. No changes to update found in ${Object.keys(duplicates).join(", ")} \
+                 ${(Object.keys(duplicates).length > 1) ? ' fields' : ' field.'}.`, updatedUser: returnUserInfo } );
         } else {
-            res.send({ msg: "User was updated successfully." });
+            return res.json({ msg: "User was updated successfully.", updatedUser: returnUserInfo  });
         }
     } catch (e) {
-        res.status(500).json({ msg: 'Server error', error: e.message });
+        console.log(e);
+        return res.status(500).json({ msg: 'Server error', error: e.message });
     }  
 }
 
@@ -374,7 +404,7 @@ router.patch('/admin/user-update',
     verifyAdminWithSession, 
     // admin can update user: username, email, role
     body('id').trim().escape().notEmpty().isMongoId().withMessage('Invalid user ID format'),
-    body('username').optional().trim().notEmpty().escape().withMessage('Invalid username'),
+    body('username').optional().trim().notEmpty().isLength({ min: 3, max: 20 }).withMessage('Username must be between 3 & 20 characters long').escape().withMessage('Invalid username'),
     body('email').optional().trim().notEmpty().normalizeEmail().isEmail().withMessage('Invalid email'),
     body('isAdmin').optional().isBoolean().withMessage('Invalid role'),
     async (req, res) => { 
@@ -384,7 +414,7 @@ router.patch('/admin/user-update',
         const updateBody = buildUpdateBody(req.body, ['username', 'email', 'isAdmin']);
         // call update user function
         try {
-            await updateUser(updateBody, req.body.id, 'admin', res);
+            await updateUser(updateBody, req.body.id, 'admin', res, req);
           } catch (e) {
             res.status(500).json({ msg: 'Server error', error: e.message });
         }    
@@ -395,10 +425,15 @@ router.patch('/admin/user-update',
 router.patch('/profile-update', 
     verifySession,
     // user can update own: username, email, password     
-    body('id').trim().escape().notEmpty().isMongoId().withMessage('Invalid user ID format'),
-    body('username').optional().trim().notEmpty().escape().withMessage('Invalid username'),
+    body('id').trim().notEmpty().isMongoId().withMessage('Invalid user ID format'),
+    body('username').optional().trim().notEmpty().isLength({ min: 3, max: 20 }).withMessage('Username must be between 3 & 20 characters long').withMessage('Invalid username').escape(),
     body('email').optional().trim().notEmpty().normalizeEmail().isEmail().withMessage('Invalid email'),
     body('password').optional().trim().notEmpty().isStrongPassword({minLength: 6, 
+                                                          minUppercase: 1, 
+                                                          minLowercase: 1, 
+                                                          minSymbols: 1
+                                                            }).withMessage('Invalid password'),
+    body('updatedPassword').optional().trim().notEmpty().isStrongPassword({minLength: 6, 
                                                           minUppercase: 1, 
                                                           minLowercase: 1, 
                                                           minSymbols: 1
@@ -407,15 +442,27 @@ router.patch('/profile-update',
         const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() });}      
 
+        // let id = '';
+
+        // if (req.body.hasOwnProperty('id')) {
+        //     id = req.body.id; // string need to convert to mongoId?
+        //     // console.log('from req body' + JSON.stringify(id, 2, 2));
+        //     // return res.send({ id: id });
+        // } else {
+        //     id = req.session.userId;
+        //     // console.log('from session body' + JSON.stringify(id, 2, 2));
+        //     // return res.send({ id: id });
+        // }
+
         //User can only update their own details
         if(req.session.userId !== req.body.id) {
             return res.status(401).send('Unauthorized');
         }       
-        const updateBody = buildUpdateBody(req.body, ['username', 'email', 'password']);
+        const updateBody = buildUpdateBody(req.body, ['username', 'email', 'password', 'updatedPassword']);
 
         // call update user function
         try {
-            await updateUser(updateBody, req.body.id, 'user', res);
+            await updateUser(updateBody, req.body.id, 'user', res, req);
         } catch (e) {
             res.status(500).json({ msg: 'Server error', error: e.message });
         }           
@@ -476,11 +523,12 @@ router.delete('/delete-profile',
         try {
             const deletedUser = await User.findByIdAndDelete(id);           
             res.send({
-                message: `Recipe was deleted successfully!, reponse: ${deletedUser}`
+                message: `User information deleted successfully!`, reponse: deletedUser
               });
         } catch (e) {
-            res.status(500).json({ msg: 'Error deleting user', error: e.message });
+            return res.status(500).json({ msg: 'Error deleting user', error: e.message });
         }
+        //delete recipes as well???
      }
 )
 

@@ -17,13 +17,12 @@ const useUserService = () => {
         }
       }, []);
     
+      // For admin to get user info
       const get = useCallback(async (id) => {
-
         try {
           //id parameter is a string
           // const response = await http.get(`/auth/user/id?id=${id}`);
-
-          const response = await http.post(`/auth/user/id`, id, {withCredentials: true });
+          const response = await http.post(`/auth/user/id`, {id: id}, {withCredentials: true });
           return response.data;
         } catch (error) {
             if(error.response.data === 'Unauthorized'){
@@ -35,26 +34,34 @@ const useUserService = () => {
         }
       }, []);
 
-      // Get user data with session id
+      // Get user data with session id. 
       const getUserWithAuth = useCallback(async () => {
         try {
           const response = await http.get(`/auth/user-info`, { withCredentials: true });          
           // console.log('User Info:', response.data.sessionVerified);
+          return response.data;
 
-        } catch (err) {          
-          switch (err.response.data) {
-            case 'Invalid token.':
-              console.log(`Error fetching user info: Access Denied. Your login session may have expired.`)
-              break;
-            case 'Access denied.':
-              console.log(`Error fetching user info: Access Denied. Invalid credentials`)
-              break;
-            default:
-              console.log(`Error fetching user info: Access Denied.`)
-              break;
+        } catch (e) {       
+          if ([ 400, 401, 404, 500 ].find((i) => i === e.response.status)) {
+            return e.response
+          } else {
+            throw e;
           }
           
+          // switch (err.response.data) {
+          //   case 'Invalid token.':
+          //     console.log(`Error fetching user info: Access Denied. Your login session may have expired.`)
+          //     break;
+          //   case 'Access denied.':
+          //     console.log(`Error fetching user info: Access Denied. Invalid credentials`)
+          //     break;
+          //   default:
+          //     console.log(`Error fetching user info: Access Denied.`)
+          //     break;
+          // }
+          
         }
+       
 
       }, []);
 
@@ -68,17 +75,13 @@ const useUserService = () => {
               return(user);
           } else {
             return 401; 
-          }
-          
-            // 'Access Denied. Your login session may have expired.'; 
-                   
+          } // 'Access Denied. Your login session may have expired.';                    
         } catch (err) {          
           if (err.response.status === 401) {
             return 401; 
           } else {
             return err;
-          }
-          
+          }          
         }
       }, []);
 
@@ -149,9 +152,14 @@ const useUserService = () => {
         try {
           const response = await http.patch('auth/profile-update', 
                                               data, { withCredentials: true } );
-          console.log(response);
-        } catch (e) {
-          throw e;
+          return response.data;
+        } catch (e) {          
+          if ([ 400, 401, 404, 500 ].find((i) => i === e.response.status)) {
+            return e.response
+          } else {
+            throw e;
+          }
+          
         }       
       }, []);
     

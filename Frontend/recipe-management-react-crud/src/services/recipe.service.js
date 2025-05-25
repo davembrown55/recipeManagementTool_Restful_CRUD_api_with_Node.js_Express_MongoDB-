@@ -45,7 +45,7 @@ const useRecipeService = () => {
       const response = await http.post('/recipes', data, { withCredentials: true });
       return response.data;
     } catch (error) {
-      console.error('Error creating recipe:', error);
+      // console.error('Error creating recipe:', error);
       throw error;
     }
   }, []);

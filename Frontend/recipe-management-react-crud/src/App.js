@@ -14,14 +14,8 @@ import AdminPanel from "./components/admin/adminPanel.component";
 import UserProfile from "./components/userProfile/userProfile.component";
 import Logout from "./auth/logout";
 import {useTheme} from './common/ThemeProvider';
-// import ThemeToggle from './common/ThemeToggle';
 import { Container, Button, Nav, Navbar, Spinner  } from "react-bootstrap";
 import GetNavLinks from "./components/navbars/links";
-
-import useUserService from "./services/user.service";
-
-import EditRecipe from "./components/recipe/edit-recipe";
-import ViewRecipe from "./components/recipe/view-recipe";
 
 
 const App = () => {
@@ -43,11 +37,6 @@ const App = () => {
     };
     doVerify();
   }, []);
-
-  const { getUserWithAuth, getAll, get, adminUserUpdate, userUpdate, adminRemoveUser, removeProfile, logout } = useUserService() ;
-
-
-    
   
   if (isLoading) {
     return (
@@ -56,8 +45,7 @@ const App = () => {
         <p>Loading...</p>        
       </Container>
 
-    );
-    
+    );    
   }
 
   return (
@@ -65,8 +53,7 @@ const App = () => {
           <Navbar 
             expand="sm"  
             data-bs-theme={themeVariants['data-bs-theme']}
-          > 
-          {/* <Button onClick={testRoute}>Log</Button> */}
+          >          
             <Container fluid>
               <Navbar.Brand as={Link} to={"/recipes"}>Recipe Manager</Navbar.Brand>
               <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -81,18 +68,16 @@ const App = () => {
                 <Route path="/" element={<RecipeList type='all'/>} />
                 <Route path="/recipes" element={<RecipeList type='all'/>} />
                 <Route path="/recipes/:id" element={<Recipe />} />
-                {/* <Route path="/recipes/:id" element={<EditRecipe />} /> */}
                 <Route element={<ProtectedRoutes/>}>
-                  <Route path="/my-recipes" element={<RecipeList type='mine' />}  />
+                  <Route path="/my-recipes/" element={<RecipeList type='mine' />}  />
                   <Route path="/add" element={<AddRecipe />}  />                  
-                  <Route path="/userProfile" element={<UserProfile />}  />
-                  <Route path="/my-recipes" element={<RecipeList />}  />                  
+                  <Route path="/userProfile" element={<UserProfile />}  />           
                 </Route >
                 <Route element={<ProtectedRoutesAdmin/>}>
                   <Route path="/admin" element={<AdminPanel />}  />
                 </Route>
                 <Route path="/login/*" element={<UserLogin />} />
-                <Route path="*" element={<p>There's nothing here: 404!</p>} />
+                <Route path="*" element={<h1 style = {{padding:'30px', margin: '0 auto', textAlign: 'center'}}>404: There's nothing here!</h1>} />
                 <Route path="/logout" element={<Logout />} />
               </Routes>           
           </Container>

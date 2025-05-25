@@ -49,7 +49,7 @@ const UserRegister = () => {
                 const input = currentUserDetails.username.trim();
                 const params = {username: input};
 
-                if (input.length === 0) {
+                if (input.length === 0 || typeof errors.usernameError !== 'undefined') {
                     setUsernameAvailable(null);
                     return;
                 }
@@ -76,7 +76,7 @@ const UserRegister = () => {
                 const params = {
                     email: input                    
                 };
-                if (errors.emailError || input.length === 0) {
+                if (input.length === 0 || typeof errors.emailError !== 'undefined') {
                     setEmailAvailable(null);
                     return;
                 }
@@ -106,7 +106,11 @@ const UserRegister = () => {
         const {usernameError,  ...validationErrors} = errors;  
         if (username.trim().length === 0 ){
             validationErrors.usernameError = 'Field Empty'; 
-        } 
+        } else if (username.trim().length < 3 ) {
+            validationErrors.usernameError = 'Must be at least 3 characters long';
+        } else if (username.trim().length > 20 ) {
+            validationErrors.usernameError = 'Must be less than 20 characters long';
+        }
         setErrors(validationErrors);   
     }
 
@@ -130,7 +134,12 @@ const UserRegister = () => {
         if(displayInitialPasswordMessage){setDisplayInitialPasswordMessage(false)} 
         setCurrentUserDetails({ ...currentUserDetails, password });
 
-        const {passwordError, initialPasswordError,  ...validationErrors} = errors;  
+        const {passwordError, passwordMatchError,  initialPasswordError,  ...validationErrors} = errors;  
+        
+        if (passwordMatch.trim().length > 0 && passwordMatch !== password) {
+            validationErrors.passwordMatchError = "Doesn't match password";         
+        }
+       
         let tmpPasswordError = {};
 
         if (password.trim().length === 0 ){
@@ -314,7 +323,7 @@ const UserRegister = () => {
                 >
                 </Form.Control>
                 <Form.Control.Feedback type="invalid">
-                  {errors.usernameError || "Username is already taken."}
+                  {errors.usernameError || "Username is unavailable."}
                 </Form.Control.Feedback>
                 <Form.Control.Feedback type="valid">
                     Username is available!

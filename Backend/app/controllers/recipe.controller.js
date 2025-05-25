@@ -24,21 +24,10 @@ const verifySession = (req, res, next) => {
 
 
 // Create and save a new recipe
-exports.create = async (req, res) => {
-
-    // const sanitizedRecipe = sanitizeRecipe(req);
-    // if (sanitizedRecipe === null) {
-    //     return res.status(400).send({
-    //         message: "Recipe data empty after processing"
-    //     });
-    // }
-    
+exports.create = async (req, res) => {    
     const { title, description, ingredients, instructions, cookingTimeMinutes, diets, mealTypes, published } = req.body;
 
-
     // Create a Recipe
-    // const recipe = new Recipe({sanitizedRecipe});
-
     const recipe = new Recipe({
         title,
         description,
@@ -48,16 +37,15 @@ exports.create = async (req, res) => {
         diets,
         mealTypes,
         published,
-        userId: req.session.userId // Assuming you assign the logged-in user ID to the recipe
-    });
-   
+        userId: req.session.userId 
+    });  
 
     // Save Recipe in the database
-    try {
+    try {    
        const response = await recipe.save();
        return res.json({ message: 'Recipe added to database', recipe: response});
     } catch (e) {
-        res.status(500).json({ msg: 'Server Error, an error occured while creating recipe.', Error: e, });
+        return res.status(500).json({ msg: 'Server Error, an error occured while creating recipe.', Error: e, });
     }
 
 };
@@ -112,74 +100,10 @@ const buildQueryCondition = (query) => {
     
 }
 
-// Retrieve all recipes from the database. Handle requests re: title, ingredients and maxCookingTime
-// Now incorporated into findAll
-// exports.oldFindAll = async (req, res) => {
-//     // const { page, size } = req.query;
-//     const { page, size } =  req.searchType === 'advanced' ? req.body : req.query ;   
-
-//     let condition = {};
-//     req.searchType === 'advanced' ? condition = buildQueryCondition(req.body) : condition = buildQueryCondition(req.query);
-
-//     const { limit, offset } = getPagination(page, size);
-  
-//     const options = {
-//       offset,
-//       limit,  
-//       populate:  {path: 'userId',  select: 'username'}, // Adding populate to options
-//     };
-
-//     try {
-//       const foundRecipes = await Recipe.paginate(condition, options);
-//       res.send({
-//         totalItems: foundRecipes.totalDocs,
-//         recipes: foundRecipes.docs,
-//         totalPages: foundRecipes.totalPages,
-//         currentPage: foundRecipes.page - 1,
-//         role: req.authdRole
-//       });
-//     } catch (e) {
-//       res.status(500).send({
-//         message:
-//           e.message || "An error occurred while retrieving recipes."
-//       });
-//     }  
-   
-//   };
-  
-  // Find a single recipe with an id
-  // exports.findOne = (req, res) => {
-  //   const id = req.params.id;  
-  //   Recipe.findById(id).populate('userId', 'username')
-      
-  //     .then(data => {
-  //       if (!data)
-  //         res.status(404).send({ message: "There is no recipe with the following ID: " + id });
-  //       else {
-  //         // const { userId, ...rest } = data.toObject(); // remove userID from reponse
-  //         // if (userId && userId.username) {
-  //         //   // rest.username = userId.username;  
-  //         //   const {username} = userId;
-  //         //   rest.username = username;
-  //         //   res.send(rest);
-  //         // } else { 
-  //           res.send(data);
-  //         // }
-  
-  //       } 
-  //     })
-  //     .catch(err => {
-  //       res
-  //         .status(500)
-  //         .send({ message: "Error retrieving recipe with id=" + id });
-  //     });
-  // };
-
-  exports.findOne = async (req, res) => {
+exports.findOne = async (req, res) => {
     const  id  = req.params.id;
     const role = req.authdRole;
     let userId = req.session ? req.session.userId : false;
-
     
     try {
       const recipe = await Recipe.findById(id).populate('userId', 'username');
@@ -210,19 +134,17 @@ const buildQueryCondition = (query) => {
           return res.status(401).send(`Unauthorised user credentials!`);
         } 
       }     
-
     } catch (e) {
       return res.status(500).json({ msg: 'Server error', error: e.message });
     }
     
-  };
+};
 
   const processRecipeUpdate = async (req, res, updateBody, recipeId, role) => {   
     try {
-
       const existingRecipe = await Recipe.findById(recipeId).populate('userId', 'username');
       if (!existingRecipe) {
-        return res.status(404).json({ message: 'Recipe not found' });
+        return res.status(404).json({ msg: 'Recipe not found' });
       }     
 
       // user can only update their own recipe
@@ -268,15 +190,14 @@ const buildQueryCondition = (query) => {
         return res.status(400).send({ msg: "No valid fields provided for update."});
       }
 
-      const updatedRecipe = await Recipe.findByIdAndUpdate(recipeId, { $set: updateBody }, { new: true, useFindAndModify: false });
+      const updatedRecipe = await Recipe.findByIdAndUpdate(recipeId, { $set: updateBody }, { new: true, useFindAndModify: false }).populate('userId', 'username');
 
       if(!updatedRecipe) {
         return  res.status(404).send({msg: `Cannot update user with id=${recipeId}.`});
-      } else if (Object.keys(updateBody).length > 0 && Object.keys(updateBody).length !== updateBodyInitialLength) {
+      } else if (Object.keys(updateBody).length > 0 && Object.keys(updateBody).length !== updateBodyInitialLength) {          
           // Partial update
           return res.json({ msg: 
-            `Recipe: ${updatedRecipe.title} was updated. Updates made to ${Object.keys(updateBody).join(", ")} \
-            ${(Object.keys(updateBody).length > 1) ? ' fields.' : ' field.'}`, updatedRecipeData: updatedRecipe} );    
+            `Recipe: ${updatedRecipe.title} was updated. Updates made to ${Object.keys(updateBody).join(", ")}${(Object.keys(updateBody).length > 1) ? ' fields.' : ' field.'}`, updatedRecipeData: updatedRecipe} );    
 
           // return res.json({ msg: 
           //     `Recipe was updated. No changes found in ${Object.keys(duplicates).join(", ")} \

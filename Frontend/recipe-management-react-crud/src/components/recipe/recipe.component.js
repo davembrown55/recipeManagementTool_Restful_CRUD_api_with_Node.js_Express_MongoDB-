@@ -51,9 +51,9 @@ useEffect(() => {
         try {
           const data = await get(idParam);
           if (data.status === 401) {
-            // auth failed show unauthoruised modal & then redirect to allRecipes
+            // auth failed show unauthorised modal & then redirect to allRecipes
             await verify();
-            setUnauthorisedModal(true);
+            setUnauthorisedModal(true); // open modal to inform user, then navigate to /recipes when user closes modal: hideUnauthorisedModal
           } else {
             const access = data.access;
             access === 'all' ? setCanUpdate(true) : setCanUpdate(false);

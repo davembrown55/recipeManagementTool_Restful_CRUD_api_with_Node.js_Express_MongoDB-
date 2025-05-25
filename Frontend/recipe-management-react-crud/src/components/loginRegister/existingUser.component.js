@@ -150,7 +150,7 @@ const ExistingUser = () => {
           let resetUser = { email: "", password: "" };
           setCurrentUserDetails(resetUser);
           setPasswordFocus(false);
-          navigate('/recipes');
+          navigate('/my-recipes');
        
         } catch (error) {
           if(error.response.data.msg === "Invalid credentials") {

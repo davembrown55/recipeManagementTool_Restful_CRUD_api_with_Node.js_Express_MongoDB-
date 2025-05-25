@@ -1,3 +1,4 @@
+const he = require('he');
 module.exports = (mongoose, mongoosePaginate) => {
     var schema = mongoose.Schema(
         {
@@ -20,10 +21,9 @@ module.exports = (mongoose, mongoosePaginate) => {
     schema.method("toJSON", function() {
         const { __v, _id, userId, ...rest } = this.toObject();        
         rest.id = _id;
-
         
         if(userId && typeof userId === 'object' && userId.username) {
-            rest.username = userId.username;
+            rest.username = he.decode(userId.username);
         }
         return rest;
     });

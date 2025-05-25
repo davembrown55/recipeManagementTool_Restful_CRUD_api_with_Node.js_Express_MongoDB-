@@ -27,10 +27,7 @@ const AdminPanel = () => {
         //     activeTab = "adminTab2";
         // }
     };
-
-
-
-
+    
     return (
         <Container fluid className="d-flex justify-content-center">
             

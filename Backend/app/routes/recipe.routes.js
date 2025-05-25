@@ -5,7 +5,6 @@ const User = require('../models/user.model');
 const router = express.Router();
 const recipeValidationChain = require('../models/recipeValidationChain');
 const sanitizeHtml = require('sanitize-html');
-
 const recipes = require("../controllers/recipe.controller");
 const { check, validationResult } = require('express-validator');
 
